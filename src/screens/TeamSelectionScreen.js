@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, gradients, shadows, borderRadius, spacing, typography } from '../styles/theme';
 import { getTeams } from '../storage/asyncStorage';
+import TeamBadge from '../components/TeamBadge';
 
 const TeamSelectionScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -70,14 +71,7 @@ const TeamSelectionScreen = ({ navigation }) => {
     >
       {selectedTeam ? (
         <View style={styles.selectedTeam}>
-          <View style={[styles.teamBadge, { backgroundColor: selectedTeam.color || colors.primary }]}>
-            <Text style={[
-              styles.teamBadgeText,
-              selectedTeam.color === '#FFFFFF' && { color: '#1A1F36' }
-            ]}>
-              {selectedTeam.name.substring(0, 2).toUpperCase()}
-            </Text>
-          </View>
+          <TeamBadge team={selectedTeam} size={56} />
           <View style={styles.teamInfo}>
             <Text style={styles.teamLabel}>{title}</Text>
             <Text style={styles.teamName}>{selectedTeam.name}</Text>
@@ -146,14 +140,7 @@ const TeamSelectionScreen = ({ navigation }) => {
                 onPress={() => handleTeamSelect(team)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.optionBadge, { backgroundColor: team.color || colors.primary }]}>
-                  <Text style={[
-                    styles.optionBadgeText,
-                    team.color === '#FFFFFF' && { color: '#1A1F36' }
-                  ]}>
-                    {team.name.substring(0, 2).toUpperCase()}
-                  </Text>
-                </View>
+                <TeamBadge team={team} size={42} />
                 <View style={styles.optionInfo}>
                   <Text style={styles.optionName}>{team.name}</Text>
                   <Text style={styles.optionPlayers}>{team.players.length} jugadores</Text>
@@ -374,18 +361,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
-  },
-  optionBadge: {
-    width: 42,
-    height: 42,
-    borderRadius: borderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  optionBadgeText: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-    fontSize: 15,
   },
   optionInfo: {
     marginLeft: spacing.md,

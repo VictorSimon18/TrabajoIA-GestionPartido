@@ -13,6 +13,7 @@ import { colors, gradients, shadows, borderRadius, spacing, typography } from '.
 import Timer from '../components/Timer';
 import PlayerCard from '../components/PlayerCard';
 import EventModal from '../components/EventModal';
+import TeamBadge from '../components/TeamBadge';
 import { saveMatch, updatePlayerStats, saveCurrentMatch, clearCurrentMatch } from '../storage/asyncStorage';
 
 const MatchScreen = ({ route, navigation }) => {
@@ -164,7 +165,7 @@ const MatchScreen = ({ route, navigation }) => {
       {/* Scoreboard */}
       <View style={styles.scoreboard}>
         <View style={styles.teamScore}>
-          <View style={[styles.teamColorDot, { backgroundColor: homeTeam.color || colors.primary }]} />
+          <TeamBadge team={homeTeam} size={32} />
           <Text style={styles.teamNameScore} numberOfLines={1}>{homeTeam.name}</Text>
         </View>
 
@@ -179,7 +180,7 @@ const MatchScreen = ({ route, navigation }) => {
         </View>
 
         <View style={styles.teamScore}>
-          <View style={[styles.teamColorDot, { backgroundColor: awayTeam.color || colors.info }]} />
+          <TeamBadge team={awayTeam} size={32} />
           <Text style={styles.teamNameScore} numberOfLines={1}>{awayTeam.name}</Text>
         </View>
       </View>
@@ -188,7 +189,7 @@ const MatchScreen = ({ route, navigation }) => {
       <View style={styles.lineupsContainer}>
         <View style={styles.lineupColumn}>
           <View style={styles.lineupHeader}>
-            <View style={[styles.headerDot, { backgroundColor: homeTeam.color || colors.primary }]} />
+            <TeamBadge team={homeTeam} size={20} />
             <Text style={styles.lineupTitle}>Local</Text>
           </View>
           <ScrollView style={styles.playersList} showsVerticalScrollIndicator={false}>
@@ -209,7 +210,7 @@ const MatchScreen = ({ route, navigation }) => {
 
         <View style={styles.lineupColumn}>
           <View style={styles.lineupHeader}>
-            <View style={[styles.headerDot, { backgroundColor: awayTeam.color || colors.info }]} />
+            <TeamBadge team={awayTeam} size={20} />
             <Text style={styles.lineupTitle}>Visitante</Text>
           </View>
           <ScrollView style={styles.playersList} showsVerticalScrollIndicator={false}>
@@ -275,11 +276,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
   },
-  teamColorDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
   teamNameScore: {
     color: colors.textSecondary,
     fontSize: 12,
@@ -328,11 +324,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.sm,
     gap: spacing.xs,
-  },
-  headerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
   },
   lineupTitle: {
     ...typography.caption,

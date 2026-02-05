@@ -16,6 +16,7 @@ import { colors, gradients, shadows, borderRadius, spacing, typography } from '.
 import { saveTeam } from '../storage/asyncStorage';
 import { positions } from '../data/defaultTeams';
 import PlayerCard from '../components/PlayerCard';
+import TeamBadge from '../components/TeamBadge';
 
 const TEAM_COLORS = [
   '#D32F2F', '#C2185B', '#7B1FA2', '#512DA8',
@@ -33,6 +34,7 @@ const CreateTeamScreen = ({ route, navigation }) => {
 
   const [teamName, setTeamName] = useState('');
   const [teamColor, setTeamColor] = useState(TEAM_COLORS[0]);
+  const [logoUrl, setLogoUrl] = useState('');
   const [players, setPlayers] = useState([]);
 
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -43,6 +45,7 @@ const CreateTeamScreen = ({ route, navigation }) => {
     if (isEditing && existingTeam) {
       setTeamName(existingTeam.name);
       setTeamColor(existingTeam.color || TEAM_COLORS[0]);
+      setLogoUrl(existingTeam.logoUrl || '');
       setPlayers(existingTeam.players || []);
     }
   }, [existingTeam, isEditing]);
@@ -109,6 +112,7 @@ const CreateTeamScreen = ({ route, navigation }) => {
       id: isEditing && existingTeam ? existingTeam.id : `team-${Date.now()}`,
       name: teamName.trim(),
       color: teamColor,
+      logoUrl: logoUrl.trim() || undefined,
       players,
     };
 
@@ -182,6 +186,40 @@ const CreateTeamScreen = ({ route, navigation }) => {
                   )}
                 </TouchableOpacity>
               ))}
+            </View>
+          </View>
+
+          {/* Team badge URL */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Escudo del Equipo</Text>
+            <View style={styles.badgeRow}>
+              <TeamBadge
+                team={{ name: teamName || 'EQ', color: teamColor, logoUrl: logoUrl.trim() || undefined }}
+                size={64}
+              />
+              <View style={styles.badgeInputContainer}>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    value={logoUrl}
+                    onChangeText={setLogoUrl}
+                    placeholder="URL de imagen del escudo"
+                    placeholderTextColor={colors.textMuted}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                  />
+                </View>
+                {logoUrl.trim() !== '' && (
+                  <TouchableOpacity
+                    style={styles.clearUrlButton}
+                    onPress={() => setLogoUrl('')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.clearUrlText}>Limpiar</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
 
@@ -394,6 +432,29 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  badgeInputContainer: {
+    flex: 1,
+    gap: spacing.sm,
+  },
+  clearUrlButton: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  clearUrlText: {
+    color: colors.danger,
+    fontWeight: '600',
+    fontSize: 12,
   },
   addPlayerForm: {
     flexDirection: 'row',

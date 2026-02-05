@@ -22,12 +22,14 @@ const screenOptions = {
   contentStyle: {
     backgroundColor: colors.background,
   },
-  animation: 'slide_from_right',
+  animation: 'fade',
+  animationDuration: 200,
+  navigationBarColor: colors.background,
 };
 
 export default function App() {
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider style={{ backgroundColor: colors.background }}>
       <NavigationContainer
         theme={{
           ...DarkTheme,

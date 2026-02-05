@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, shadows, borderRadius, spacing, typography } from '../styles/theme';
+import TeamBadge from './TeamBadge';
 
 const TeamCard = ({ team, onPress, onDelete, showStats = false, stats = null }) => {
   const playerCount = team.players?.length || 0;
@@ -13,14 +14,9 @@ const TeamCard = ({ team, onPress, onDelete, showStats = false, stats = null }) 
       activeOpacity={0.7}
     >
       <View style={styles.mainContent}>
-        {/* Badge de color */}
-        <View style={[styles.colorBadge, { backgroundColor: teamColor }]}>
-          <Text style={[
-            styles.colorBadgeText,
-            teamColor === '#FFFFFF' && { color: '#1A1F36' }
-          ]}>
-            {team.name.substring(0, 2).toUpperCase()}
-          </Text>
+        {/* Badge */}
+        <View style={styles.badgeWrapper}>
+          <TeamBadge team={team} size={50} />
         </View>
 
         {/* Info */}
@@ -87,18 +83,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
   },
-  colorBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: borderRadius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
+  badgeWrapper: {
     marginRight: spacing.md,
-  },
-  colorBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '800',
   },
   infoContainer: {
     flex: 1,

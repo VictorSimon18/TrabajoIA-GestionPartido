@@ -13,6 +13,7 @@ import { colors, gradients, shadows, borderRadius, spacing, typography } from '.
 import { getTeams, getTeamStats, getMatches } from '../storage/asyncStorage';
 import TeamCard from '../components/TeamCard';
 import PlayerCard from '../components/PlayerCard';
+import TeamBadge from '../components/TeamBadge';
 
 const StatsScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -69,14 +70,7 @@ const StatsScreen = ({ navigation }) => {
       <View style={styles.teamDetail}>
         {/* Team header */}
         <View style={styles.detailHeader}>
-          <View style={[styles.teamBadge, { backgroundColor: selectedTeam.color || colors.primary }]}>
-            <Text style={[
-              styles.teamBadgeText,
-              selectedTeam.color === '#FFFFFF' && { color: '#1A1F36' }
-            ]}>
-              {selectedTeam.name.substring(0, 2).toUpperCase()}
-            </Text>
-          </View>
+          <TeamBadge team={selectedTeam} size={52} />
           <View style={styles.detailHeaderInfo}>
             <Text style={styles.detailTeamName}>{selectedTeam.name}</Text>
             <Text style={styles.detailSubtext}>{selectedTeam.players.length} jugadores</Text>
@@ -283,18 +277,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-  },
-  teamBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  teamBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '800',
   },
   detailHeaderInfo: {
     flex: 1,
