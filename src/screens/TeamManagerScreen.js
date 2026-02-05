@@ -32,7 +32,6 @@ const TeamManagerScreen = ({ navigation }) => {
   const handleDeleteTeam = (teamId) => {
     const team = teams.find(t => t.id === teamId);
 
-    // No permitir eliminar equipos por defecto
     if (teamId === 'barcelona' || teamId === 'madrid') {
       Alert.alert('Error', 'No puedes eliminar los equipos predeterminados');
       return;
@@ -60,15 +59,22 @@ const TeamManagerScreen = ({ navigation }) => {
   };
 
   return (
-    <LinearGradient colors={gradients.primary} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <LinearGradient colors={gradients.background} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>‹ Volver</Text>
+          <Text style={styles.backButtonText}>← Volver</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Gestor de Equipos</Text>
-        <Text style={styles.subtitle}>{teams.length} equipos registrados</Text>
+        <View style={styles.counterRow}>
+          <View style={styles.counterBadge}>
+            <Text style={styles.counterText}>{teams.length}</Text>
+          </View>
+          <Text style={styles.subtitle}>equipos registrados</Text>
+        </View>
       </View>
 
+      {/* Team list */}
       <ScrollView
         style={styles.teamsList}
         contentContainerStyle={styles.teamsListContent}
@@ -85,20 +91,27 @@ const TeamManagerScreen = ({ navigation }) => {
 
         {teams.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>👥</Text>
+            <View style={styles.emptyIconContainer}>
+              <Text style={styles.emptyIcon}>👥</Text>
+            </View>
             <Text style={styles.emptyText}>No hay equipos</Text>
             <Text style={styles.emptySubtext}>Crea tu primer equipo</Text>
           </View>
         )}
       </ScrollView>
 
-      {/* Botón flotante para crear equipo */}
+      {/* FAB */}
       <TouchableOpacity
         style={[styles.fab, { bottom: spacing.xl + insets.bottom }]}
         onPress={() => navigation.navigate('CreateTeam', { isEditing: false })}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
       >
-        <Text style={styles.fabText}>+</Text>
+        <LinearGradient
+          colors={gradients.primary}
+          style={styles.fabGradient}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </LinearGradient>
       </TouchableOpacity>
     </LinearGradient>
   );
@@ -115,18 +128,36 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   backButtonText: {
-    color: colors.textPrimary,
-    fontSize: 18,
+    color: colors.textSecondary,
+    fontSize: 15,
     fontWeight: '600',
   },
   title: {
     ...typography.title,
     color: colors.textPrimary,
   },
+  counterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  counterBadge: {
+    backgroundColor: colors.primaryGlow,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.round,
+  },
+  counterText: {
+    color: colors.primary,
+    fontWeight: '800',
+    fontSize: 13,
+  },
   subtitle: {
     ...typography.body,
     color: colors.textSecondary,
-    marginTop: spacing.xs,
   },
   teamsList: {
     flex: 1,
@@ -139,9 +170,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xxl * 2,
   },
-  emptyIcon: {
-    fontSize: 64,
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.md,
+  },
+  emptyIcon: {
+    fontSize: 36,
   },
   emptyText: {
     ...typography.subtitle,
@@ -155,18 +196,22 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: spacing.xl,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.accent,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    ...shadows.glow,
+  },
+  fabGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.large,
   },
   fabText: {
-    fontSize: 36,
-    color: colors.textDark,
-    fontWeight: 'bold',
+    fontSize: 32,
+    color: '#FFFFFF',
+    fontWeight: '300',
     marginTop: -2,
   },
 });

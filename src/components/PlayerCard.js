@@ -4,9 +4,8 @@ import { colors, shadows, borderRadius, spacing } from '../styles/theme';
 import { positions } from '../data/defaultTeams';
 
 const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents = [] }) => {
-  const positionData = positions[player.position] || { name: player.position, color: '#757575' };
+  const positionData = positions[player.position] || { name: player.position, color: '#5A6384' };
 
-  // Contar eventos del jugador en el partido actual
   const playerEvents = matchEvents.filter(e => e.playerId === player.id);
   const goals = playerEvents.filter(e => e.type === 'goal').length;
   const assists = playerEvents.filter(e => e.type === 'assist').length;
@@ -19,7 +18,6 @@ const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents
       <TouchableOpacity
         style={[
           styles.compactContainer,
-          { borderLeftColor: teamColor || colors.primary },
           isSubbedOut && styles.subbedOut,
         ]}
         onPress={onPress}
@@ -37,13 +35,14 @@ const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents
             {redCards > 0 && <Text style={styles.eventIcon}>🟥</Text>}
           </View>
         </View>
+        <View style={[styles.positionDot, { backgroundColor: positionData.color }]} />
       </TouchableOpacity>
     );
   }
 
   return (
     <TouchableOpacity
-      style={[styles.container, { borderLeftColor: teamColor || colors.primary }]}
+      style={styles.container}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -53,33 +52,32 @@ const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents
 
       <View style={styles.infoContainer}>
         <Text style={styles.playerName}>{player.name}</Text>
-        <View style={styles.positionContainer}>
-          <Text style={[styles.positionText, { color: positionData.color }]}>
-            {positionData.name}
-          </Text>
+        <View style={styles.positionTag}>
+          <View style={[styles.positionIndicator, { backgroundColor: positionData.color }]} />
+          <Text style={styles.positionText}>{positionData.name}</Text>
         </View>
       </View>
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
+          <Text style={styles.statEmoji}>⚽</Text>
           <Text style={styles.statValue}>{player.stats.goals}</Text>
-          <Text style={styles.statLabel}>⚽</Text>
         </View>
         <View style={styles.statItem}>
+          <Text style={styles.statEmoji}>👟</Text>
           <Text style={styles.statValue}>{player.stats.assists}</Text>
-          <Text style={styles.statLabel}>👟</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: colors.yellowCard }]}>
+          <Text style={styles.statEmoji}>🟨</Text>
+          <Text style={[styles.statValue, player.stats.yellowCards > 0 && { color: colors.yellowCard }]}>
             {player.stats.yellowCards}
           </Text>
-          <Text style={styles.statLabel}>🟨</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: colors.redCard }]}>
+          <Text style={styles.statEmoji}>🟥</Text>
+          <Text style={[styles.statValue, player.stats.redCards > 0 && { color: colors.redCard }]}>
             {player.stats.redCards}
           </Text>
-          <Text style={styles.statLabel}>🟥</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -91,51 +89,50 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginVertical: spacing.xs,
-    borderLeftWidth: 4,
-    ...shadows.small,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   compactContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: borderRadius.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
     padding: spacing.sm,
     marginVertical: 2,
-    borderLeftWidth: 3,
-    ...shadows.small,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   subbedOut: {
-    opacity: 0.5,
-    backgroundColor: 'rgba(200,200,200,0.9)',
+    opacity: 0.4,
   },
   numberBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: borderRadius.round,
+    width: 46,
+    height: 46,
+    borderRadius: borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
   },
   numberBadgeCompact: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.round,
+    width: 30,
+    height: 30,
+    borderRadius: borderRadius.sm,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.sm,
   },
   numberText: {
-    color: colors.textPrimary,
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
   },
   numberTextCompact: {
-    color: colors.textPrimary,
-    fontSize: 14,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
   },
   infoContainer: {
     flex: 1,
@@ -144,21 +141,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   playerName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.textDark,
+    color: colors.textPrimary,
   },
   compactName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: colors.textDark,
+    color: colors.textPrimary,
   },
-  positionContainer: {
-    marginTop: spacing.xs,
+  positionTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 3,
+  },
+  positionIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
   },
   positionText: {
-    fontSize: 14,
+    fontSize: 12,
+    color: colors.textSecondary,
     fontWeight: '500',
+  },
+  positionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginLeft: spacing.sm,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -166,22 +178,23 @@ const styles = StyleSheet.create({
   },
   statItem: {
     alignItems: 'center',
+    gap: 2,
+  },
+  statEmoji: {
+    fontSize: 12,
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.textDark,
-  },
-  statLabel: {
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textSecondary,
   },
   eventsRow: {
     flexDirection: 'row',
     marginTop: 2,
+    gap: 2,
   },
   eventIcon: {
-    fontSize: 12,
-    marginRight: 2,
+    fontSize: 11,
   },
 });
 

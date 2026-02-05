@@ -8,6 +8,7 @@ import {
   ScrollView,
   Pressable,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, shadows, borderRadius, spacing, typography } from '../styles/theme';
 import { eventTypes, positions } from '../data/defaultTeams';
 
@@ -26,19 +27,16 @@ const EventModal = ({
 
   if (!player) return null;
 
-  const positionData = positions[player.position] || { name: player.position, color: '#757575' };
+  const positionData = positions[player.position] || { name: player.position, color: '#5A6384' };
 
   const handleEventPress = (eventType) => {
     if (eventType === 'goal') {
-      // Mostrar selector de asistencia
       setPendingEvent({ type: 'goal' });
       setShowAssistPicker(true);
     } else if (eventType === 'substitution') {
-      // Mostrar selector de jugador que entra
       setPendingEvent({ type: 'substitution' });
       setShowSubstitutionPicker(true);
     } else {
-      // Evento directo
       onEventSelect({
         type: eventType,
         playerId: player.id,
@@ -72,9 +70,9 @@ const EventModal = ({
   const handleSubstitutionSelect = (inPlayerId) => {
     onEventSelect({
       type: 'substitution',
-      playerId: player.id, // Sale
+      playerId: player.id,
       minute,
-      relatedPlayerId: inPlayerId, // Entra
+      relatedPlayerId: inPlayerId,
     });
     setShowSubstitutionPicker(false);
     handleClose();
@@ -89,6 +87,13 @@ const EventModal = ({
 
   const otherPlayers = teamPlayers.filter(p => p.id !== player.id);
 
+  const eventButtons = [
+    { type: 'goal', icon: '⚽', label: 'Gol', gradient: ['#00E676', '#00C853'] },
+    { type: 'yellowCard', icon: '🟨', label: 'Amarilla', gradient: ['#FFD600', '#FFAB00'] },
+    { type: 'redCard', icon: '🟥', label: 'Roja', gradient: ['#FF1744', '#D50000'] },
+    { type: 'substitution', icon: '🔄', label: 'Cambio', gradient: ['#D500F9', '#AA00FF'] },
+  ];
+
   return (
     <Modal
       visible={visible}
@@ -98,29 +103,35 @@ const EventModal = ({
     >
       <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable style={styles.modalContainer} onPress={e => e.stopPropagation()}>
-          {/* Cabecera del jugador */}
+          {/* Player header */}
           <View style={styles.header}>
             <View style={[styles.numberBadge, { backgroundColor: positionData.color }]}>
               <Text style={styles.numberText}>{player.number}</Text>
             </View>
             <View style={styles.playerInfo}>
               <Text style={styles.playerName}>{player.name}</Text>
-              <Text style={styles.playerPosition}>{positionData.name}</Text>
+              <View style={styles.positionRow}>
+                <View style={[styles.positionDot, { backgroundColor: positionData.color }]} />
+                <Text style={styles.playerPosition}>{positionData.name}</Text>
+              </View>
             </View>
             <View style={styles.minuteBadge}>
               <Text style={styles.minuteText}>{minute}'</Text>
             </View>
           </View>
 
-          {/* Selector de asistencia */}
+          {/* Assist picker */}
           {showAssistPicker && (
             <View style={styles.pickerContainer}>
-              <Text style={styles.pickerTitle}>¿Quién asistió?</Text>
-              <ScrollView style={styles.pickerList}>
+              <Text style={styles.pickerTitle}>Selecciona asistente</Text>
+              <ScrollView style={styles.pickerList} showsVerticalScrollIndicator={false}>
                 <TouchableOpacity
                   style={styles.pickerItem}
                   onPress={() => handleAssistSelect(null)}
                 >
+                  <View style={styles.noAssistBadge}>
+                    <Text style={styles.noAssistText}>—</Text>
+                  </View>
                   <Text style={styles.pickerItemText}>Sin asistencia</Text>
                 </TouchableOpacity>
                 {otherPlayers.map(p => (
@@ -129,7 +140,9 @@ const EventModal = ({
                     style={styles.pickerItem}
                     onPress={() => handleAssistSelect(p.id)}
                   >
-                    <Text style={styles.pickerNumber}>{p.number}</Text>
+                    <View style={[styles.pickerNumberBadge, { backgroundColor: (positions[p.position] || {}).color || colors.surfaceLight }]}>
+                      <Text style={styles.pickerNumber}>{p.number}</Text>
+                    </View>
                     <Text style={styles.pickerItemText}>{p.name}</Text>
                   </TouchableOpacity>
                 ))}
@@ -140,11 +153,11 @@ const EventModal = ({
             </View>
           )}
 
-          {/* Selector de sustitución */}
+          {/* Substitution picker */}
           {showSubstitutionPicker && (
             <View style={styles.pickerContainer}>
-              <Text style={styles.pickerTitle}>¿Quién entra?</Text>
-              <ScrollView style={styles.pickerList}>
+              <Text style={styles.pickerTitle}>Jugador que entra</Text>
+              <ScrollView style={styles.pickerList} showsVerticalScrollIndicator={false}>
                 {benchPlayers.length === 0 ? (
                   <Text style={styles.noBenchText}>No hay jugadores en el banquillo</Text>
                 ) : (
@@ -154,7 +167,9 @@ const EventModal = ({
                       style={styles.pickerItem}
                       onPress={() => handleSubstitutionSelect(p.id)}
                     >
-                      <Text style={styles.pickerNumber}>{p.number}</Text>
+                      <View style={[styles.pickerNumberBadge, { backgroundColor: (positions[p.position] || {}).color || colors.surfaceLight }]}>
+                        <Text style={styles.pickerNumber}>{p.number}</Text>
+                      </View>
                       <Text style={styles.pickerItemText}>{p.name}</Text>
                     </TouchableOpacity>
                   ))
@@ -166,43 +181,30 @@ const EventModal = ({
             </View>
           )}
 
-          {/* Botones de eventos */}
+          {/* Event buttons grid */}
           {!showAssistPicker && !showSubstitutionPicker && (
             <View style={styles.eventsContainer}>
               <Text style={styles.eventsTitle}>Registrar evento</Text>
 
               <View style={styles.eventsGrid}>
-                <TouchableOpacity
-                  style={[styles.eventButton, { backgroundColor: eventTypes.goal.color }]}
-                  onPress={() => handleEventPress('goal')}
-                >
-                  <Text style={styles.eventIcon}>⚽</Text>
-                  <Text style={styles.eventLabel}>Gol</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.eventButton, { backgroundColor: eventTypes.yellowCard.color }]}
-                  onPress={() => handleEventPress('yellowCard')}
-                >
-                  <Text style={styles.eventIcon}>🟨</Text>
-                  <Text style={styles.eventLabel}>Amarilla</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.eventButton, { backgroundColor: eventTypes.redCard.color }]}
-                  onPress={() => handleEventPress('redCard')}
-                >
-                  <Text style={styles.eventIcon}>🟥</Text>
-                  <Text style={styles.eventLabel}>Roja</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.eventButton, { backgroundColor: eventTypes.substitution.color }]}
-                  onPress={() => handleEventPress('substitution')}
-                >
-                  <Text style={styles.eventIcon}>🔄</Text>
-                  <Text style={styles.eventLabel}>Cambio</Text>
-                </TouchableOpacity>
+                {eventButtons.map(({ type, icon, label, gradient }) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={styles.eventButtonWrapper}
+                    onPress={() => handleEventPress(type)}
+                    activeOpacity={0.7}
+                  >
+                    <LinearGradient
+                      colors={gradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.eventButton}
+                    >
+                      <Text style={styles.eventIcon}>{icon}</Text>
+                      <Text style={styles.eventLabel}>{label}</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))}
               </View>
 
               <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
@@ -219,16 +221,18 @@ const EventModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
   },
   modalContainer: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
+    backgroundColor: colors.backgroundCard,
+    borderRadius: borderRadius.xxl,
     width: '100%',
     maxWidth: 400,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     ...shadows.large,
   },
   header: {
@@ -236,19 +240,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.border,
   },
   numberBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.round,
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   numberText: {
-    color: colors.textPrimary,
-    fontSize: 24,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '800',
   },
   playerInfo: {
     flex: 1,
@@ -256,69 +260,93 @@ const styles = StyleSheet.create({
   },
   playerName: {
     ...typography.subtitle,
-    color: colors.textDark,
+    color: colors.textPrimary,
+  },
+  positionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  positionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
   },
   playerPosition: {
-    ...typography.body,
-    color: colors.textMuted,
+    ...typography.caption,
+    color: colors.textSecondary,
   },
   minuteBadge: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.primaryGlow,
+    borderWidth: 1,
+    borderColor: colors.primary,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.round,
   },
   minuteText: {
-    color: colors.textPrimary,
-    fontWeight: 'bold',
-    fontSize: 18,
+    color: colors.primary,
+    fontWeight: '800',
+    fontSize: 16,
   },
   eventsContainer: {
     padding: spacing.lg,
   },
   eventsTitle: {
     ...typography.heading,
-    color: colors.textDark,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.md,
+    textTransform: 'uppercase',
+    fontSize: 13,
+    letterSpacing: 1,
   },
   eventsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: spacing.sm,
+  },
+  eventButtonWrapper: {
+    width: '48%',
+    borderRadius: borderRadius.lg,
+    ...shadows.medium,
   },
   eventButton: {
-    width: '47%',
     padding: spacing.lg,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
-    ...shadows.medium,
   },
   eventIcon: {
-    fontSize: 36,
+    fontSize: 32,
     marginBottom: spacing.sm,
   },
   eventLabel: {
-    color: colors.textPrimary,
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
   },
   closeButton: {
     marginTop: spacing.lg,
     padding: spacing.md,
     alignItems: 'center',
+    backgroundColor: colors.surfaceLight,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   closeButtonText: {
-    color: colors.textMuted,
-    fontSize: 16,
+    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '600',
   },
   pickerContainer: {
     padding: spacing.lg,
   },
   pickerTitle: {
     ...typography.heading,
-    color: colors.textDark,
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
@@ -329,40 +357,63 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  pickerNumber: {
+  pickerNumberBadge: {
     width: 32,
     height: 32,
-    borderRadius: borderRadius.round,
-    backgroundColor: colors.primary,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    lineHeight: 32,
-    fontWeight: 'bold',
+    borderRadius: borderRadius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: spacing.md,
-    overflow: 'hidden',
+  },
+  pickerNumber: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  noAssistBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.surfaceLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  noAssistText: {
+    color: colors.textMuted,
+    fontSize: 18,
+    fontWeight: '700',
   },
   pickerItemText: {
-    fontSize: 16,
-    color: colors.textDark,
+    fontSize: 15,
+    color: colors.textPrimary,
+    fontWeight: '500',
   },
   noBenchText: {
     textAlign: 'center',
     color: colors.textMuted,
     padding: spacing.lg,
+    fontSize: 14,
   },
   cancelButton: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     padding: spacing.md,
     alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: colors.surfaceLight,
     borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   cancelButtonText: {
-    color: colors.textMuted,
+    color: colors.textSecondary,
     fontWeight: '600',
+    fontSize: 14,
   },
 });
 

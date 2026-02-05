@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, shadows, borderRadius, spacing } from '../styles/theme';
 
 const Timer = forwardRef(({ onTimeUpdate }, ref) => {
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [half, setHalf] = useState(1); // 1 = Primera parte, 2 = Segunda parte
+  const [half, setHalf] = useState(1);
   const intervalRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
@@ -52,46 +53,60 @@ const Timer = forwardRef(({ onTimeUpdate }, ref) => {
   const handleNextHalf = () => {
     if (half === 1) {
       setIsRunning(false);
-      setSeconds(45 * 60); // 45 minutos para empezar segunda parte
+      setSeconds(45 * 60);
       setHalf(2);
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.halfIndicator}>
-        <Text style={styles.halfText}>
-          {half === 1 ? '1ª Parte' : '2ª Parte'}
-        </Text>
+      {/* Half indicator */}
+      <View style={styles.halfRow}>
+        <View style={[styles.halfBadge, half === 1 && styles.halfBadgeActive]}>
+          <Text style={[styles.halfText, half === 1 && styles.halfTextActive]}>1T</Text>
+        </View>
+        <View style={styles.halfDivider} />
+        <View style={[styles.halfBadge, half === 2 && styles.halfBadgeActive]}>
+          <Text style={[styles.halfText, half === 2 && styles.halfTextActive]}>2T</Text>
+        </View>
       </View>
 
+      {/* Timer display */}
       <Text style={styles.timerText}>{formatTime(seconds)}</Text>
 
+      {/* Controls */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, isRunning ? styles.pauseButton : styles.playButton]}
-          onPress={handlePlayPause}
-        >
-          <Text style={styles.buttonText}>
-            {isRunning ? '⏸️' : '▶️'}
-          </Text>
-        </TouchableOpacity>
-
-        {half === 1 && !isRunning && seconds > 0 && (
-          <TouchableOpacity
-            style={[styles.button, styles.nextHalfButton]}
-            onPress={handleNextHalf}
-          >
-            <Text style={styles.buttonText}>2ª →</Text>
-          </TouchableOpacity>
-        )}
-
         <TouchableOpacity
           style={[styles.button, styles.resetButton]}
           onPress={handleReset}
         >
-          <Text style={styles.buttonText}>🔄</Text>
+          <Text style={styles.resetIcon}>↺</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.playButton, isRunning && styles.pauseButton]}
+          onPress={handlePlayPause}
+        >
+          <LinearGradient
+            colors={isRunning ? ['#FFD600', '#FFAB00'] : ['#00E676', '#00C853']}
+            style={styles.playButtonGradient}
+          >
+            <Text style={styles.playIcon}>
+              {isRunning ? '❚❚' : '▶'}
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {half === 1 && !isRunning && seconds > 0 ? (
+          <TouchableOpacity
+            style={[styles.button, styles.nextHalfButton]}
+            onPress={handleNextHalf}
+          >
+            <Text style={styles.nextHalfText}>2T →</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={[styles.button, { backgroundColor: 'transparent' }]} />
+        )}
       </View>
     </View>
   );
@@ -100,59 +115,104 @@ const Timer = forwardRef(({ onTimeUpdate }, ref) => {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    padding: spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
     ...shadows.medium,
   },
-  halfIndicator: {
-    backgroundColor: colors.accent,
+  halfRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  halfBadge: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.round,
-    marginBottom: spacing.sm,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  halfBadgeActive: {
+    backgroundColor: colors.primaryGlow,
+    borderColor: colors.primary,
   },
   halfText: {
-    color: colors.textDark,
-    fontWeight: 'bold',
-    fontSize: 14,
+    color: colors.textMuted,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  halfTextActive: {
+    color: colors.primary,
+  },
+  halfDivider: {
+    width: 20,
+    height: 1,
+    backgroundColor: colors.border,
   },
   timerText: {
-    fontSize: 64,
-    fontWeight: 'bold',
+    fontSize: 72,
+    fontWeight: '200',
     color: colors.textPrimary,
     fontVariant: ['tabular-nums'],
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
+    letterSpacing: 4,
   },
   buttonContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
     marginTop: spacing.md,
-    gap: spacing.md,
+    gap: spacing.lg,
   },
   button: {
-    width: 60,
-    height: 60,
-    borderRadius: borderRadius.round,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.medium,
   },
   playButton: {
-    backgroundColor: colors.success,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    ...shadows.glow,
   },
   pauseButton: {
-    backgroundColor: colors.warning,
+    ...shadows.accentGlow,
+  },
+  playButtonGradient: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playIcon: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontWeight: '900',
   },
   resetButton: {
-    backgroundColor: colors.danger,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  resetIcon: {
+    fontSize: 22,
+    color: colors.textSecondary,
   },
   nextHalfButton: {
-    backgroundColor: colors.info,
+    backgroundColor: colors.infoGlow,
+    borderWidth: 1,
+    borderColor: colors.info,
   },
-  buttonText: {
-    fontSize: 24,
+  nextHalfText: {
+    fontSize: 12,
+    color: colors.info,
+    fontWeight: '700',
   },
 });
 

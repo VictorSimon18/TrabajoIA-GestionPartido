@@ -17,7 +17,7 @@ const TeamSelectionScreen = ({ navigation }) => {
   const [teams, setTeams] = useState([]);
   const [homeTeam, setHomeTeam] = useState(null);
   const [awayTeam, setAwayTeam] = useState(null);
-  const [selectingFor, setSelectingFor] = useState(null); // 'home' | 'away'
+  const [selectingFor, setSelectingFor] = useState(null);
 
   useEffect(() => {
     loadTeams();
@@ -56,10 +56,7 @@ const TeamSelectionScreen = ({ navigation }) => {
       return;
     }
 
-    navigation.navigate('Match', {
-      homeTeam,
-      awayTeam,
-    });
+    navigation.navigate('Match', { homeTeam, awayTeam });
   };
 
   const renderTeamSelector = (title, selectedTeam, type) => (
@@ -69,11 +66,15 @@ const TeamSelectionScreen = ({ navigation }) => {
         selectedTeam && { borderColor: selectedTeam.color || colors.primary },
       ]}
       onPress={() => setSelectingFor(type)}
+      activeOpacity={0.7}
     >
       {selectedTeam ? (
         <View style={styles.selectedTeam}>
           <View style={[styles.teamBadge, { backgroundColor: selectedTeam.color || colors.primary }]}>
-            <Text style={styles.teamBadgeText}>
+            <Text style={[
+              styles.teamBadgeText,
+              selectedTeam.color === '#FFFFFF' && { color: '#1A1F36' }
+            ]}>
               {selectedTeam.name.substring(0, 2).toUpperCase()}
             </Text>
           </View>
@@ -82,38 +83,51 @@ const TeamSelectionScreen = ({ navigation }) => {
             <Text style={styles.teamName}>{selectedTeam.name}</Text>
             <Text style={styles.playerCount}>{selectedTeam.players.length} jugadores</Text>
           </View>
+          <View style={styles.checkBadge}>
+            <Text style={styles.checkText}>✓</Text>
+          </View>
         </View>
       ) : (
         <View style={styles.emptySelector}>
-          <Text style={styles.teamLabel}>{title}</Text>
-          <Text style={styles.selectText}>Toca para seleccionar</Text>
+          <View style={styles.emptyBadge}>
+            <Text style={styles.emptyBadgeText}>?</Text>
+          </View>
+          <View>
+            <Text style={styles.teamLabel}>{title}</Text>
+            <Text style={styles.selectText}>Toca para seleccionar</Text>
+          </View>
         </View>
       )}
     </TouchableOpacity>
   );
 
   return (
-    <LinearGradient colors={gradients.primary} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <LinearGradient colors={gradients.background} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>‹ Volver</Text>
+          <Text style={styles.backButtonText}>← Volver</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Nuevo Partido</Text>
         <Text style={styles.subtitle}>Selecciona los equipos</Text>
       </View>
 
-      {/* Selectores de equipo */}
+      {/* Selectores */}
       <View style={styles.selectorsContainer}>
         {renderTeamSelector('Equipo Local', homeTeam, 'home')}
 
         <View style={styles.vsContainer}>
-          <Text style={styles.vsText}>VS</Text>
+          <View style={styles.vsLine} />
+          <View style={styles.vsBadge}>
+            <Text style={styles.vsText}>VS</Text>
+          </View>
+          <View style={styles.vsLine} />
         </View>
 
         {renderTeamSelector('Equipo Visitante', awayTeam, 'away')}
       </View>
 
-      {/* Lista de equipos cuando se está seleccionando */}
+      {/* Lista de equipos */}
       {selectingFor && (
         <View style={styles.teamListContainer}>
           <View style={styles.teamListHeader}>
@@ -124,18 +138,19 @@ const TeamSelectionScreen = ({ navigation }) => {
               <Text style={styles.cancelText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView style={styles.teamList}>
+          <ScrollView style={styles.teamList} showsVerticalScrollIndicator={false}>
             {teams.map((team) => (
               <TouchableOpacity
                 key={team.id}
-                style={[
-                  styles.teamOption,
-                  { borderLeftColor: team.color || colors.primary },
-                ]}
+                style={styles.teamOption}
                 onPress={() => handleTeamSelect(team)}
+                activeOpacity={0.7}
               >
                 <View style={[styles.optionBadge, { backgroundColor: team.color || colors.primary }]}>
-                  <Text style={styles.optionBadgeText}>
+                  <Text style={[
+                    styles.optionBadgeText,
+                    team.color === '#FFFFFF' && { color: '#1A1F36' }
+                  ]}>
                     {team.name.substring(0, 2).toUpperCase()}
                   </Text>
                 </View>
@@ -143,13 +158,14 @@ const TeamSelectionScreen = ({ navigation }) => {
                   <Text style={styles.optionName}>{team.name}</Text>
                   <Text style={styles.optionPlayers}>{team.players.length} jugadores</Text>
                 </View>
+                <View style={[styles.optionAccent, { backgroundColor: team.color || colors.primary }]} />
               </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
       )}
 
-      {/* Botón comenzar */}
+      {/* Boton comenzar */}
       {!selectingFor && (
         <TouchableOpacity
           style={[
@@ -158,9 +174,20 @@ const TeamSelectionScreen = ({ navigation }) => {
           ]}
           onPress={handleStartMatch}
           disabled={!homeTeam || !awayTeam}
+          activeOpacity={0.7}
         >
-          <Text style={styles.startButtonText}>Comenzar Partido</Text>
-          <Text style={styles.startButtonIcon}>⚽</Text>
+          <LinearGradient
+            colors={(!homeTeam || !awayTeam) ? [colors.surfaceLight, colors.surfaceLight] : gradients.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.startButtonGradient}
+          >
+            <Text style={[
+              styles.startButtonText,
+              (!homeTeam || !awayTeam) && styles.startButtonTextDisabled
+            ]}>Comenzar Partido</Text>
+            <Text style={styles.startButtonIcon}>⚽</Text>
+          </LinearGradient>
         </TouchableOpacity>
       )}
     </LinearGradient>
@@ -179,8 +206,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   backButtonText: {
-    color: colors.textPrimary,
-    fontSize: 18,
+    color: colors.textSecondary,
+    fontSize: 15,
     fontWeight: '600',
   },
   title: {
@@ -193,14 +220,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   selectorsContainer: {
-    gap: spacing.md,
+    gap: spacing.xs,
   },
   teamSelector: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    borderWidth: 3,
-    borderColor: 'transparent',
+    borderWidth: 2,
+    borderColor: colors.border,
     ...shadows.medium,
   },
   selectedTeam: {
@@ -208,59 +235,112 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   teamBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: borderRadius.md,
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   teamBadgeText: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '800',
   },
   teamInfo: {
     marginLeft: spacing.md,
     flex: 1,
   },
   teamLabel: {
-    ...typography.caption,
+    ...typography.small,
     color: colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   teamName: {
     ...typography.subtitle,
-    color: colors.textDark,
+    color: colors.textPrimary,
+    marginTop: 2,
   },
   playerCount: {
-    ...typography.small,
-    color: colors.textMuted,
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  checkBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primaryGlow,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkText: {
+    color: colors.primary,
+    fontWeight: '800',
+    fontSize: 16,
   },
   emptySelector: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  selectText: {
-    ...typography.body,
-    color: colors.primary,
-    marginTop: spacing.sm,
-  },
-  vsContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },
+  emptyBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  emptyBadgeText: {
+    color: colors.textMuted,
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  selectText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  vsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    justifyContent: 'center',
+  },
+  vsLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  vsBadge: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.round,
+    marginHorizontal: spacing.md,
+  },
   vsText: {
-    ...typography.title,
-    color: colors.textPrimary,
-    opacity: 0.8,
+    ...typography.heading,
+    color: colors.textMuted,
+    fontWeight: '800',
   },
   teamListContainer: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     marginTop: spacing.lg,
     padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     ...shadows.large,
   },
   teamListHeader: {
@@ -270,15 +350,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.border,
   },
   teamListTitle: {
     ...typography.heading,
-    color: colors.textDark,
+    color: colors.textPrimary,
   },
   cancelText: {
     color: colors.danger,
     fontWeight: '600',
+    fontSize: 14,
   },
   teamList: {
     flex: 1,
@@ -287,56 +368,74 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.sm,
-    borderLeftWidth: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
   },
   optionBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.sm,
+    width: 42,
+    height: 42,
+    borderRadius: borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   optionBadgeText: {
-    color: colors.textPrimary,
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 15,
   },
   optionInfo: {
     marginLeft: spacing.md,
+    flex: 1,
   },
   optionName: {
     ...typography.body,
     fontWeight: '600',
-    color: colors.textDark,
+    color: colors.textPrimary,
   },
   optionPlayers: {
     ...typography.small,
-    color: colors.textMuted,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  optionAccent: {
+    width: 4,
+    height: '100%',
+    borderRadius: 2,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
   startButton: {
+    marginTop: spacing.xl,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    ...shadows.glow,
+  },
+  startButtonDisabled: {
+    ...shadows.small,
+  },
+  startButtonGradient: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.accent,
     padding: spacing.lg,
     borderRadius: borderRadius.xl,
-    marginTop: spacing.xl,
-    ...shadows.large,
-  },
-  startButtonDisabled: {
-    backgroundColor: '#9E9E9E',
-    opacity: 0.7,
   },
   startButtonText: {
-    ...typography.subtitle,
-    color: colors.textDark,
+    ...typography.heading,
+    color: '#FFFFFF',
+    fontWeight: '700',
     marginRight: spacing.sm,
   },
+  startButtonTextDisabled: {
+    color: colors.textMuted,
+  },
   startButtonIcon: {
-    fontSize: 28,
+    fontSize: 24,
   },
 });
 

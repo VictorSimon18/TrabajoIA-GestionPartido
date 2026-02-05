@@ -20,33 +20,23 @@ const MatchScreen = ({ route, navigation }) => {
   const { homeTeam, awayTeam } = route.params;
   const timerRef = useRef(null);
 
-  // Estado del partido
   const [homeScore, setHomeScore] = useState(0);
   const [awayScore, setAwayScore] = useState(0);
   const [events, setEvents] = useState([]);
   const [currentMinute, setCurrentMinute] = useState(0);
 
-  // Alineaciones (primeros 11 jugadores)
   const [homeLineup, setHomeLineup] = useState(homeTeam.players.slice(0, 11).map(p => p.id));
   const [awayLineup, setAwayLineup] = useState(awayTeam.players.slice(0, 11).map(p => p.id));
 
-  // Modal de eventos
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-  // Guardar estado del partido periódicamente
   useEffect(() => {
     const saveState = async () => {
       await saveCurrentMatch({
-        homeTeam,
-        awayTeam,
-        homeScore,
-        awayScore,
-        events,
-        homeLineup,
-        awayLineup,
-        currentMinute,
+        homeTeam, awayTeam, homeScore, awayScore,
+        events, homeLineup, awayLineup, currentMinute,
       });
     };
     saveState();
@@ -71,7 +61,6 @@ const MatchScreen = ({ route, navigation }) => {
 
     setEvents(prev => [...prev, newEvent]);
 
-    // Actualizar marcador si es gol
     if (eventData.type === 'goal') {
       if (selectedTeam.id === homeTeam.id) {
         setHomeScore(prev => prev + 1);
@@ -80,7 +69,6 @@ const MatchScreen = ({ route, navigation }) => {
       }
     }
 
-    // Manejar sustitución
     if (eventData.type === 'substitution' && eventData.relatedPlayerId) {
       if (selectedTeam.id === homeTeam.id) {
         setHomeLineup(prev =>
@@ -112,24 +100,17 @@ const MatchScreen = ({ route, navigation }) => {
           text: 'Finalizar',
           style: 'destructive',
           onPress: async () => {
-            // Guardar partido en historial
             const match = {
               id: `match-${Date.now()}`,
               date: new Date().toISOString(),
               homeTeam: { id: homeTeam.id, name: homeTeam.name, color: homeTeam.color },
               awayTeam: { id: awayTeam.id, name: awayTeam.name, color: awayTeam.color },
-              homeScore,
-              awayScore,
-              events,
-              lineup: {
-                home: homeLineup,
-                away: awayLineup,
-              },
+              homeScore, awayScore, events,
+              lineup: { home: homeLineup, away: awayLineup },
             };
 
             await saveMatch(match);
 
-            // Actualizar estadísticas de jugadores
             for (const event of events) {
               const team = event.teamId === homeTeam.id ? homeTeam : awayTeam;
               const player = team.players.find(p => p.id === event.playerId);
@@ -147,7 +128,6 @@ const MatchScreen = ({ route, navigation }) => {
               }
             }
 
-            // Actualizar partidos jugados para todos en la alineación
             const allLineupPlayers = [
               ...homeLineup.map(id => ({ teamId: homeTeam.id, playerId: id })),
               ...awayLineup.map(id => ({ teamId: awayTeam.id, playerId: id })),
@@ -177,11 +157,11 @@ const MatchScreen = ({ route, navigation }) => {
   const awayBenchPlayers = getBenchPlayers(awayTeam, awayLineup);
 
   return (
-    <LinearGradient colors={gradients.dark} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      {/* Cronómetro */}
+    <LinearGradient colors={gradients.match} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      {/* Timer */}
       <Timer ref={timerRef} onTimeUpdate={handleTimeUpdate} />
 
-      {/* Marcador */}
+      {/* Scoreboard */}
       <View style={styles.scoreboard}>
         <View style={styles.teamScore}>
           <View style={[styles.teamColorDot, { backgroundColor: homeTeam.color || colors.primary }]} />
@@ -189,21 +169,28 @@ const MatchScreen = ({ route, navigation }) => {
         </View>
 
         <View style={styles.scoreContainer}>
-          <Text style={styles.scoreText}>{homeScore}</Text>
-          <Text style={styles.scoreSeparator}>-</Text>
-          <Text style={styles.scoreText}>{awayScore}</Text>
+          <View style={styles.scoreBox}>
+            <Text style={styles.scoreText}>{homeScore}</Text>
+          </View>
+          <Text style={styles.scoreSeparator}>:</Text>
+          <View style={styles.scoreBox}>
+            <Text style={styles.scoreText}>{awayScore}</Text>
+          </View>
         </View>
 
         <View style={styles.teamScore}>
-          <View style={[styles.teamColorDot, { backgroundColor: awayTeam.color || colors.secondary }]} />
+          <View style={[styles.teamColorDot, { backgroundColor: awayTeam.color || colors.info }]} />
           <Text style={styles.teamNameScore} numberOfLines={1}>{awayTeam.name}</Text>
         </View>
       </View>
 
-      {/* Alineaciones */}
+      {/* Lineups */}
       <View style={styles.lineupsContainer}>
         <View style={styles.lineupColumn}>
-          <Text style={styles.lineupTitle}>Local</Text>
+          <View style={styles.lineupHeader}>
+            <View style={[styles.headerDot, { backgroundColor: homeTeam.color || colors.primary }]} />
+            <Text style={styles.lineupTitle}>Local</Text>
+          </View>
           <ScrollView style={styles.playersList} showsVerticalScrollIndicator={false}>
             {homeLinePlayers.map(player => (
               <PlayerCard
@@ -218,8 +205,13 @@ const MatchScreen = ({ route, navigation }) => {
           </ScrollView>
         </View>
 
+        <View style={styles.columnDivider} />
+
         <View style={styles.lineupColumn}>
-          <Text style={styles.lineupTitle}>Visitante</Text>
+          <View style={styles.lineupHeader}>
+            <View style={[styles.headerDot, { backgroundColor: awayTeam.color || colors.info }]} />
+            <Text style={styles.lineupTitle}>Visitante</Text>
+          </View>
           <ScrollView style={styles.playersList} showsVerticalScrollIndicator={false}>
             {awayLinePlayers.map(player => (
               <PlayerCard
@@ -235,12 +227,19 @@ const MatchScreen = ({ route, navigation }) => {
         </View>
       </View>
 
-      {/* Botón finalizar */}
-      <TouchableOpacity style={styles.endButton} onPress={handleEndMatch}>
-        <Text style={styles.endButtonText}>Finalizar Partido</Text>
+      {/* End match button */}
+      <TouchableOpacity style={styles.endButton} onPress={handleEndMatch} activeOpacity={0.7}>
+        <LinearGradient
+          colors={gradients.danger}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.endButtonGradient}
+        >
+          <Text style={styles.endButtonText}>Finalizar Partido</Text>
+        </LinearGradient>
       </TouchableOpacity>
 
-      {/* Modal de eventos */}
+      {/* Event Modal */}
       <EventModal
         visible={modalVisible}
         player={selectedPlayer}
@@ -263,72 +262,102 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    borderRadius: borderRadius.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
     padding: spacing.md,
     marginVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.medium,
   },
   teamScore: {
     flex: 1,
     alignItems: 'center',
+    gap: spacing.xs,
   },
   teamColorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginBottom: spacing.xs,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   teamNameScore: {
-    color: colors.textPrimary,
-    fontSize: 14,
+    color: colors.textSecondary,
+    fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
   scoreContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
+  },
+  scoreBox: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   scoreText: {
-    fontSize: 48,
-    fontWeight: 'bold',
+    fontSize: 40,
+    fontWeight: '800',
     color: colors.textPrimary,
-    minWidth: 50,
-    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
   },
   scoreSeparator: {
-    fontSize: 36,
-    color: colors.textSecondary,
-    marginHorizontal: spacing.sm,
+    fontSize: 28,
+    color: colors.textMuted,
+    fontWeight: '300',
   },
   lineupsContainer: {
     flex: 1,
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   lineupColumn: {
     flex: 1,
   },
-  lineupTitle: {
-    ...typography.heading,
-    color: colors.textPrimary,
-    textAlign: 'center',
+  columnDivider: {
+    width: 1,
+    backgroundColor: colors.border,
+  },
+  lineupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
+    gap: spacing.xs,
+  },
+  headerDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  lineupTitle: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontWeight: '700',
   },
   playersList: {
     flex: 1,
   },
   endButton: {
-    backgroundColor: colors.danger,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
     marginTop: spacing.md,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
     ...shadows.medium,
   },
+  endButtonGradient: {
+    padding: spacing.md,
+    alignItems: 'center',
+    borderRadius: borderRadius.xl,
+  },
   endButtonText: {
-    color: colors.textPrimary,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontWeight: '700',
     fontSize: 16,
   },
 });

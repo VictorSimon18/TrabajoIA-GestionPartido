@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, gradients, shadows, borderRadius, spacing, typography } from '../styles/theme';
@@ -9,7 +9,6 @@ const HomeScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    // Inicializar equipos por defecto al cargar la app
     initializeTeams();
   }, []);
 
@@ -19,57 +18,79 @@ const HomeScreen = ({ navigation }) => {
       subtitle: 'Inicia un nuevo encuentro',
       icon: '⚽',
       screen: 'TeamSelection',
-      color: colors.accent,
+      gradient: ['#00E676', '#00C853'],
+      glowColor: colors.primaryGlow,
     },
     {
       title: 'Gestor de Equipos',
       subtitle: 'Crea y administra equipos',
       icon: '👥',
       screen: 'TeamManager',
-      color: colors.secondary,
+      gradient: ['#448AFF', '#2962FF'],
+      glowColor: colors.infoGlow,
     },
     {
       title: 'Estadísticas',
       subtitle: 'Consulta el rendimiento',
       icon: '📊',
       screen: 'Stats',
-      color: colors.info,
+      gradient: ['#FFD600', '#FFAB00'],
+      glowColor: colors.accentGlow,
     },
   ];
 
   return (
-    <LinearGradient colors={gradients.primary} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <LinearGradient colors={gradients.hero} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <StatusBar barStyle="light-content" />
 
-      {/* Logo y Título */}
+      {/* Decorative glow */}
+      <View style={styles.glowCircle} />
+
+      {/* Logo y Titulo */}
       <View style={styles.header}>
-        <Text style={styles.logo}>⚽</Text>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logo}>⚽</Text>
+        </View>
         <Text style={styles.title}>FutManager</Text>
         <Text style={styles.subtitle}>Gestión de Partidos</Text>
       </View>
 
-      {/* Botones del menú */}
+      {/* Menu Cards */}
       <View style={styles.menuContainer}>
         {menuButtons.map((button, index) => (
           <TouchableOpacity
             key={index}
-            style={[styles.menuButton, { backgroundColor: button.color }]}
+            style={styles.menuCard}
             onPress={() => navigation.navigate(button.screen)}
-            activeOpacity={0.85}
+            activeOpacity={0.7}
           >
-            <Text style={styles.buttonIcon}>{button.icon}</Text>
-            <View style={styles.buttonTextContainer}>
-              <Text style={styles.buttonTitle}>{button.title}</Text>
-              <Text style={styles.buttonSubtitle}>{button.subtitle}</Text>
-            </View>
-            <Text style={styles.buttonArrow}>›</Text>
+            <LinearGradient
+              colors={button.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.menuCardGradient}
+            >
+              <View style={styles.menuCardContent}>
+                <View style={styles.iconContainer}>
+                  <Text style={styles.buttonIcon}>{button.icon}</Text>
+                </View>
+                <View style={styles.buttonTextContainer}>
+                  <Text style={styles.buttonTitle}>{button.title}</Text>
+                  <Text style={styles.buttonSubtitle}>{button.subtitle}</Text>
+                </View>
+                <View style={styles.arrowContainer}>
+                  <Text style={styles.buttonArrow}>→</Text>
+                </View>
+              </View>
+            </LinearGradient>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Fútbol 11 • Cronómetro • Eventos</Text>
+        <View style={styles.footerDivider} />
+        <Text style={styles.footerText}>Fútbol 11  •  Cronómetro  •  Eventos</Text>
       </View>
     </LinearGradient>
   );
@@ -80,26 +101,38 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.lg,
   },
+  glowCircle: {
+    position: 'absolute',
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: colors.primaryGlow,
+  },
   header: {
     alignItems: 'center',
-    marginTop: spacing.xxl * 2,
+    marginTop: spacing.xxl * 1.5,
     marginBottom: spacing.xl,
   },
+  logoContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.surface,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    ...shadows.glow,
+  },
   logo: {
-    fontSize: 80,
-    marginBottom: spacing.md,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
+    fontSize: 50,
   },
   title: {
-    ...typography.title,
-    fontSize: 42,
+    ...typography.hero,
     color: colors.textPrimary,
-    letterSpacing: 2,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
   },
   subtitle: {
     ...typography.body,
@@ -109,47 +142,74 @@ const styles = StyleSheet.create({
   menuContainer: {
     flex: 1,
     justifyContent: 'center',
-    gap: spacing.lg,
+    gap: spacing.md,
   },
-  menuButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
+  menuCard: {
     borderRadius: borderRadius.xl,
     ...shadows.large,
   },
-  buttonIcon: {
-    fontSize: 40,
+  menuCardGradient: {
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  menuCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  iconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: spacing.md,
+  },
+  buttonIcon: {
+    fontSize: 28,
   },
   buttonTextContainer: {
     flex: 1,
   },
   buttonTitle: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    ...typography.heading,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   buttonSubtitle: {
     ...typography.caption,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: spacing.xs,
+    color: 'rgba(255,255,255,0.75)',
+    marginTop: 2,
+  },
+  arrowContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonArrow: {
-    fontSize: 36,
-    color: colors.textPrimary,
-    opacity: 0.8,
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   footer: {
     alignItems: 'center',
     paddingBottom: spacing.xl,
   },
+  footerDivider: {
+    width: 40,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    marginBottom: spacing.md,
+  },
   footerText: {
     ...typography.small,
-    color: colors.textSecondary,
-    opacity: 0.7,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
   },
 });
 

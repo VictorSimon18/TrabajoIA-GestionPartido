@@ -1,6 +1,6 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -18,59 +18,46 @@ import { colors } from './src/styles/theme';
 const Stack = createNativeStackNavigator();
 
 const screenOptions = {
-  headerStyle: {
-    backgroundColor: colors.primary,
+  headerShown: false,
+  contentStyle: {
+    backgroundColor: colors.background,
   },
-  headerTintColor: colors.textPrimary,
-  headerTitleStyle: {
-    fontWeight: 'bold',
-  },
-  headerBackTitleVisible: false,
   animation: 'slide_from_right',
 };
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <NavigationContainer
+        theme={{
+          ...DarkTheme,
+          dark: true,
+          colors: {
+            ...DarkTheme.colors,
+            primary: colors.primary,
+            background: colors.background,
+            card: colors.surface,
+            text: colors.textPrimary,
+            border: colors.border,
+            notification: colors.accent,
+          },
+        }}
+      >
         <StatusBar style="light" />
         <Stack.Navigator
           initialRouteName="Home"
           screenOptions={screenOptions}
         >
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="TeamSelection"
-            component={TeamSelectionScreen}
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="TeamSelection" component={TeamSelectionScreen} />
           <Stack.Screen
             name="Match"
             component={MatchScreen}
-            options={{
-              headerShown: false,
-              gestureEnabled: false,
-            }}
+            options={{ gestureEnabled: false }}
           />
-          <Stack.Screen
-            name="TeamManager"
-            component={TeamManagerScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="CreateTeam"
-            component={CreateTeamScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Stats"
-            component={StatsScreen}
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="TeamManager" component={TeamManagerScreen} />
+          <Stack.Screen name="CreateTeam" component={CreateTeamScreen} />
+          <Stack.Screen name="Stats" component={StatsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

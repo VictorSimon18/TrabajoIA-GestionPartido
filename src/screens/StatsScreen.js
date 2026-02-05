@@ -34,7 +34,6 @@ const StatsScreen = ({ navigation }) => {
     const matches = await getMatches();
     setTotalMatches(matches.length);
 
-    // Cargar estadísticas de todos los equipos
     const stats = {};
     for (const team of loadedTeams) {
       const teamStat = await getTeamStats(team.id);
@@ -55,97 +54,105 @@ const StatsScreen = ({ navigation }) => {
     const stats = teamStats[selectedTeam.id];
     if (!stats) return null;
 
-    // Ordenar jugadores por goles
     const sortedPlayers = [...selectedTeam.players].sort(
       (a, b) => b.stats.goals - a.stats.goals
     );
 
+    const statItems = [
+      { label: 'Partidos', value: stats.matchesPlayed, color: colors.info },
+      { label: 'Victorias', value: stats.wins, color: colors.primary },
+      { label: 'Empates', value: stats.draws, color: colors.accent },
+      { label: 'Derrotas', value: stats.losses, color: colors.danger },
+    ];
+
     return (
       <View style={styles.teamDetail}>
+        {/* Team header */}
         <View style={styles.detailHeader}>
           <View style={[styles.teamBadge, { backgroundColor: selectedTeam.color || colors.primary }]}>
-            <Text style={styles.teamBadgeText}>
+            <Text style={[
+              styles.teamBadgeText,
+              selectedTeam.color === '#FFFFFF' && { color: '#1A1F36' }
+            ]}>
               {selectedTeam.name.substring(0, 2).toUpperCase()}
             </Text>
           </View>
           <View style={styles.detailHeaderInfo}>
             <Text style={styles.detailTeamName}>{selectedTeam.name}</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setSelectedTeam(null)}
-            >
-              <Text style={styles.closeButtonText}>✕</Text>
-            </TouchableOpacity>
+            <Text style={styles.detailSubtext}>{selectedTeam.players.length} jugadores</Text>
           </View>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setSelectedTeam(null)}
+          >
+            <Text style={styles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Estadísticas del equipo */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{stats.matchesPlayed}</Text>
-            <Text style={styles.statLabel}>Partidos</Text>
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.detailScroll}>
+          {/* Stats grid */}
+          <View style={styles.statsGrid}>
+            {statItems.map(({ label, value, color }) => (
+              <View key={label} style={[styles.statCard, { borderColor: color }]}>
+                <Text style={[styles.statValue, { color }]}>{value}</Text>
+                <Text style={styles.statLabel}>{label}</Text>
+              </View>
+            ))}
           </View>
-          <View style={[styles.statCard, { backgroundColor: colors.success }]}>
-            <Text style={styles.statValue}>{stats.wins}</Text>
-            <Text style={styles.statLabel}>Victorias</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.warning }]}>
-            <Text style={styles.statValue}>{stats.draws}</Text>
-            <Text style={styles.statLabel}>Empates</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.danger }]}>
-            <Text style={styles.statValue}>{stats.losses}</Text>
-            <Text style={styles.statLabel}>Derrotas</Text>
-          </View>
-        </View>
 
-        <View style={styles.goalsRow}>
-          <View style={styles.goalStat}>
-            <Text style={styles.goalValue}>{stats.goalsFor}</Text>
-            <Text style={styles.goalLabel}>Goles a favor</Text>
+          {/* Goals row */}
+          <View style={styles.goalsRow}>
+            <View style={styles.goalStat}>
+              <Text style={[styles.goalValue, { color: colors.primary }]}>{stats.goalsFor}</Text>
+              <Text style={styles.goalLabel}>A favor</Text>
+            </View>
+            <View style={styles.goalDivider} />
+            <View style={styles.goalStat}>
+              <Text style={[styles.goalValue, { color: colors.danger }]}>{stats.goalsAgainst}</Text>
+              <Text style={styles.goalLabel}>En contra</Text>
+            </View>
+            <View style={styles.goalDivider} />
+            <View style={styles.goalStat}>
+              <Text style={[
+                styles.goalValue,
+                { color: stats.goalDifference >= 0 ? colors.primary : colors.danger }
+              ]}>
+                {stats.goalDifference > 0 ? '+' : ''}{stats.goalDifference}
+              </Text>
+              <Text style={styles.goalLabel}>Diferencia</Text>
+            </View>
           </View>
-          <View style={styles.goalStat}>
-            <Text style={styles.goalValue}>{stats.goalsAgainst}</Text>
-            <Text style={styles.goalLabel}>Goles en contra</Text>
-          </View>
-          <View style={styles.goalStat}>
-            <Text style={[
-              styles.goalValue,
-              { color: stats.goalDifference >= 0 ? colors.success : colors.danger }
-            ]}>
-              {stats.goalDifference > 0 ? '+' : ''}{stats.goalDifference}
-            </Text>
-            <Text style={styles.goalLabel}>Diferencia</Text>
-          </View>
-        </View>
 
-        {/* Lista de jugadores */}
-        <Text style={styles.playersTitle}>Jugadores</Text>
-        <ScrollView
-          style={styles.playersList}
-          nestedScrollEnabled
-          showsVerticalScrollIndicator={false}
-        >
-          {sortedPlayers.map((player) => (
-            <PlayerCard
-              key={player.id}
-              player={player}
-              teamColor={selectedTeam.color}
-            />
-          ))}
+          {/* Players */}
+          <View style={styles.playersSection}>
+            <Text style={styles.playersTitle}>Jugadores</Text>
+            {sortedPlayers.map((player) => (
+              <PlayerCard
+                key={player.id}
+                player={player}
+                teamColor={selectedTeam.color}
+              />
+            ))}
+          </View>
         </ScrollView>
       </View>
     );
   };
 
   return (
-    <LinearGradient colors={gradients.primary} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <LinearGradient colors={gradients.background} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>‹ Volver</Text>
+          <Text style={styles.backButtonText}>← Volver</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Estadísticas</Text>
-        <Text style={styles.subtitle}>{totalMatches} partidos jugados</Text>
+        <View style={styles.counterRow}>
+          <View style={styles.counterBadge}>
+            <Text style={styles.counterText}>{totalMatches}</Text>
+          </View>
+          <Text style={styles.subtitle}>partidos jugados</Text>
+        </View>
       </View>
 
       {selectedTeam ? (
@@ -156,7 +163,7 @@ const StatsScreen = ({ navigation }) => {
           contentContainerStyle={styles.teamsListContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sectionTitle}>Selecciona un equipo</Text>
+          <Text style={styles.sectionLabel}>SELECCIONA UN EQUIPO</Text>
 
           {teams.map((team) => (
             <TeamCard
@@ -170,7 +177,9 @@ const StatsScreen = ({ navigation }) => {
 
           {teams.length === 0 && (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyIcon}>📊</Text>
+              <View style={styles.emptyIconContainer}>
+                <Text style={styles.emptyIcon}>📊</Text>
+              </View>
               <Text style={styles.emptyText}>No hay equipos</Text>
             </View>
           )}
@@ -191,18 +200,36 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   backButtonText: {
-    color: colors.textPrimary,
-    fontSize: 18,
+    color: colors.textSecondary,
+    fontSize: 15,
     fontWeight: '600',
   },
   title: {
     ...typography.title,
     color: colors.textPrimary,
   },
+  counterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  counterBadge: {
+    backgroundColor: colors.accentGlow,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.round,
+  },
+  counterText: {
+    color: colors.accent,
+    fontWeight: '800',
+    fontSize: 13,
+  },
   subtitle: {
     ...typography.body,
     color: colors.textSecondary,
-    marginTop: spacing.xs,
   },
   teamsList: {
     flex: 1,
@@ -211,18 +238,30 @@ const styles = StyleSheet.create({
   teamsListContent: {
     paddingBottom: spacing.xxl,
   },
-  sectionTitle: {
-    ...typography.heading,
-    color: colors.textPrimary,
+  sectionLabel: {
+    ...typography.small,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
     marginBottom: spacing.md,
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: spacing.xxl * 2,
   },
-  emptyIcon: {
-    fontSize: 64,
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: spacing.md,
+  },
+  emptyIcon: {
+    fontSize: 36,
   },
   emptyText: {
     ...typography.subtitle,
@@ -232,102 +271,122 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surface,
     margin: spacing.md,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    borderRadius: borderRadius.xxl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
     ...shadows.large,
   },
   detailHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.lg,
-    paddingBottom: spacing.md,
+    padding: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: colors.border,
   },
   teamBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.md,
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   teamBadgeText: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '800',
   },
   detailHeaderInfo: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     marginLeft: spacing.md,
   },
   detailTeamName: {
     ...typography.subtitle,
-    color: colors.textDark,
+    color: colors.textPrimary,
+  },
+  detailSubtext: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   closeButton: {
-    padding: spacing.sm,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   closeButtonText: {
-    fontSize: 24,
-    color: colors.textMuted,
+    fontSize: 16,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  detailScroll: {
+    flex: 1,
+    padding: spacing.md,
   },
   statsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
   statCard: {
     flex: 1,
-    minWidth: '22%',
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
+    backgroundColor: colors.backgroundCard,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
     alignItems: 'center',
+    borderWidth: 1,
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.textPrimary,
+    fontSize: 26,
+    fontWeight: '800',
   },
   statLabel: {
-    fontSize: 11,
-    color: colors.textPrimary,
-    opacity: 0.9,
+    fontSize: 10,
+    color: colors.textSecondary,
     marginTop: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   goalsRow: {
     flexDirection: 'row',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: borderRadius.md,
+    backgroundColor: colors.backgroundCard,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   goalStat: {
     flex: 1,
     alignItems: 'center',
   },
+  goalDivider: {
+    width: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.xs,
+  },
   goalValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.textDark,
+    fontSize: 22,
+    fontWeight: '800',
   },
   goalLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: colors.textMuted,
     marginTop: spacing.xs,
-    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  playersSection: {
+    marginBottom: spacing.lg,
   },
   playersTitle: {
     ...typography.heading,
-    color: colors.textDark,
+    color: colors.textPrimary,
     marginBottom: spacing.sm,
-  },
-  playersList: {
-    flex: 1,
   },
 });
 

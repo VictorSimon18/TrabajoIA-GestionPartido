@@ -35,7 +35,6 @@ const CreateTeamScreen = ({ route, navigation }) => {
   const [teamColor, setTeamColor] = useState(TEAM_COLORS[0]);
   const [players, setPlayers] = useState([]);
 
-  // Estado para nuevo jugador
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newPlayerNumber, setNewPlayerNumber] = useState('');
   const [newPlayerPosition, setNewPlayerPosition] = useState('DEF');
@@ -72,13 +71,7 @@ const CreateTeamScreen = ({ route, navigation }) => {
       name: newPlayerName.trim(),
       number,
       position: newPlayerPosition,
-      stats: {
-        goals: 0,
-        assists: 0,
-        yellowCards: 0,
-        redCards: 0,
-        matchesPlayed: 0,
-      },
+      stats: { goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchesPlayed: 0 },
     };
 
     setPlayers([...players, newPlayer]);
@@ -130,14 +123,13 @@ const CreateTeamScreen = ({ route, navigation }) => {
     }
   };
 
-  // Ordenar jugadores por posición
   const sortedPlayers = [...players].sort((a, b) => {
     const order = { POR: 1, DEF: 2, MED: 3, DEL: 4 };
     return (order[a.position] || 5) - (order[b.position] || 5);
   });
 
   return (
-    <LinearGradient colors={gradients.primary} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <LinearGradient colors={gradients.background} style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -150,25 +142,27 @@ const CreateTeamScreen = ({ route, navigation }) => {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-              <Text style={styles.backButtonText}>‹ Volver</Text>
+              <Text style={styles.backButtonText}>← Volver</Text>
             </TouchableOpacity>
             <Text style={styles.title}>{isEditing ? 'Editar Equipo' : 'Crear Equipo'}</Text>
           </View>
 
-          {/* Nombre del equipo */}
+          {/* Team name */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Nombre del Equipo</Text>
-            <TextInput
-              style={styles.input}
-              value={teamName}
-              onChangeText={setTeamName}
-              placeholder="Ej: Club Deportivo..."
-              placeholderTextColor={colors.textMuted}
-              maxLength={30}
-            />
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={teamName}
+                onChangeText={setTeamName}
+                placeholder="Ej: Club Deportivo..."
+                placeholderTextColor={colors.textMuted}
+                maxLength={30}
+              />
+            </View>
           </View>
 
-          {/* Selector de color */}
+          {/* Color picker */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Color del Equipo</Text>
             <View style={styles.colorGrid}>
@@ -181,68 +175,100 @@ const CreateTeamScreen = ({ route, navigation }) => {
                     teamColor === color && styles.colorSelected,
                   ]}
                   onPress={() => setTeamColor(color)}
-                />
-              ))}
-            </View>
-          </View>
-
-          {/* Añadir jugador */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Añadir Jugador ({players.length}/25)
-            </Text>
-
-            <View style={styles.addPlayerForm}>
-              <TextInput
-                style={[styles.input, styles.nameInput]}
-                value={newPlayerName}
-                onChangeText={setNewPlayerName}
-                placeholder="Nombre"
-                placeholderTextColor={colors.textMuted}
-                maxLength={20}
-              />
-
-              <TextInput
-                style={[styles.input, styles.numberInput]}
-                value={newPlayerNumber}
-                onChangeText={setNewPlayerNumber}
-                placeholder="#"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="number-pad"
-                maxLength={2}
-              />
-            </View>
-
-            <View style={styles.positionSelector}>
-              {POSITIONS.map((pos) => (
-                <TouchableOpacity
-                  key={pos}
-                  style={[
-                    styles.positionButton,
-                    { backgroundColor: positions[pos].color },
-                    newPlayerPosition === pos && styles.positionSelected,
-                  ]}
-                  onPress={() => setNewPlayerPosition(pos)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.positionButtonText}>{positions[pos].name}</Text>
+                  {teamColor === color && (
+                    <Text style={styles.colorCheck}>✓</Text>
+                  )}
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+
+          {/* Add player form */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Añadir Jugador
+              <Text style={styles.playerCountText}> ({players.length}/25)</Text>
+            </Text>
+
+            <View style={styles.addPlayerForm}>
+              <View style={[styles.inputContainer, styles.nameInput]}>
+                <TextInput
+                  style={styles.input}
+                  value={newPlayerName}
+                  onChangeText={setNewPlayerName}
+                  placeholder="Nombre"
+                  placeholderTextColor={colors.textMuted}
+                  maxLength={20}
+                />
+              </View>
+
+              <View style={[styles.inputContainer, styles.numberInput]}>
+                <TextInput
+                  style={[styles.input, { textAlign: 'center' }]}
+                  value={newPlayerNumber}
+                  onChangeText={setNewPlayerNumber}
+                  placeholder="#"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                />
+              </View>
+            </View>
+
+            <View style={styles.positionSelector}>
+              {POSITIONS.map((pos) => {
+                const posData = positions[pos];
+                const isActive = newPlayerPosition === pos;
+                return (
+                  <TouchableOpacity
+                    key={pos}
+                    style={[
+                      styles.positionButton,
+                      isActive && { backgroundColor: posData.color, borderColor: posData.color },
+                    ]}
+                    onPress={() => setNewPlayerPosition(pos)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[
+                      styles.positionButtonText,
+                      isActive && { color: '#FFFFFF' }
+                    ]}>{posData.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
             <TouchableOpacity
-              style={styles.addButton}
+              style={[styles.addButton, players.length >= 25 && styles.addButtonDisabled]}
               onPress={handleAddPlayer}
               disabled={players.length >= 25}
+              activeOpacity={0.7}
             >
-              <Text style={styles.addButtonText}>+ Añadir Jugador</Text>
+              <LinearGradient
+                colors={players.length >= 25 ? [colors.surfaceLight, colors.surfaceLight] : ['#448AFF', '#2962FF']}
+                style={styles.addButtonGradient}
+              >
+                <Text style={styles.addButtonText}>+ Añadir Jugador</Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
 
-          {/* Lista de jugadores */}
+          {/* Player list */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Plantilla {players.length >= 11 ? '✓' : `(mínimo 11)`}
-            </Text>
+            <View style={styles.plantillaHeader}>
+              <Text style={styles.sectionTitle}>Plantilla</Text>
+              {players.length >= 11 ? (
+                <View style={styles.validBadge}>
+                  <Text style={styles.validText}>✓ Completa</Text>
+                </View>
+              ) : (
+                <View style={styles.invalidBadge}>
+                  <Text style={styles.invalidText}>Mín. 11</Text>
+                </View>
+              )}
+            </View>
 
             {sortedPlayers.map((player) => (
               <TouchableOpacity
@@ -254,9 +280,9 @@ const CreateTeamScreen = ({ route, navigation }) => {
             ))}
 
             {players.length === 0 && (
-              <Text style={styles.emptyText}>
-                Añade jugadores a tu equipo
-              </Text>
+              <View style={styles.emptyPlayers}>
+                <Text style={styles.emptyText}>Añade jugadores a tu equipo</Text>
+              </View>
             )}
 
             {players.length > 0 && (
@@ -267,18 +293,24 @@ const CreateTeamScreen = ({ route, navigation }) => {
           </View>
         </ScrollView>
 
-        {/* Botón guardar */}
+        {/* Save button */}
         <TouchableOpacity
-          style={[
-            styles.saveButton,
-            players.length < 11 && styles.saveButtonDisabled,
-          ]}
+          style={[styles.saveButton, players.length < 11 && styles.saveButtonDisabled]}
           onPress={handleSaveTeam}
           disabled={players.length < 11}
+          activeOpacity={0.7}
         >
-          <Text style={styles.saveButtonText}>
-            {isEditing ? 'Guardar Cambios' : 'Crear Equipo'}
-          </Text>
+          <LinearGradient
+            colors={players.length < 11 ? [colors.surfaceLight, colors.surfaceLight] : gradients.primary}
+            style={styles.saveButtonGradient}
+          >
+            <Text style={[
+              styles.saveButtonText,
+              players.length < 11 && { color: colors.textMuted }
+            ]}>
+              {isEditing ? 'Guardar Cambios' : 'Crear Equipo'}
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </LinearGradient>
@@ -306,8 +338,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   backButtonText: {
-    color: colors.textPrimary,
-    fontSize: 18,
+    color: colors.textSecondary,
+    fontSize: 15,
     fontWeight: '600',
   },
   title: {
@@ -322,13 +354,20 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
-  input: {
+  playerCountText: {
+    color: colors.textSecondary,
+    fontWeight: '400',
+  },
+  inputContainer: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  input: {
     padding: spacing.md,
-    fontSize: 16,
-    color: colors.textDark,
-    ...shadows.small,
+    fontSize: 15,
+    color: colors.textPrimary,
   },
   colorGrid: {
     flexDirection: 'row',
@@ -336,15 +375,25 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   colorOption: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: borderRadius.md,
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   colorSelected: {
-    borderColor: colors.textPrimary,
+    borderColor: '#FFFFFF',
     transform: [{ scale: 1.1 }],
+  },
+  colorCheck: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 18,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   addPlayerForm: {
     flexDirection: 'row',
@@ -355,8 +404,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   numberInput: {
-    width: 60,
-    textAlign: 'center',
+    width: 64,
   },
   positionSelector: {
     flexDirection: 'row',
@@ -365,60 +413,106 @@ const styles = StyleSheet.create({
   },
   positionButton: {
     flex: 1,
-    padding: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
     borderRadius: borderRadius.md,
     alignItems: 'center',
-    opacity: 0.7,
-  },
-  positionSelected: {
-    opacity: 1,
-    transform: [{ scale: 1.05 }],
-    ...shadows.small,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   positionButtonText: {
-    color: colors.textPrimary,
+    color: colors.textSecondary,
     fontWeight: '600',
     fontSize: 12,
   },
   addButton: {
-    backgroundColor: colors.secondary,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
     ...shadows.small,
   },
+  addButtonDisabled: {
+    opacity: 0.5,
+  },
+  addButtonGradient: {
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+  },
   addButtonText: {
-    color: colors.textPrimary,
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  plantillaHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  validBadge: {
+    backgroundColor: colors.primaryGlow,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.round,
+  },
+  validText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  invalidBadge: {
+    backgroundColor: colors.dangerGlow,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.round,
+  },
+  invalidText: {
+    color: colors.danger,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  emptyPlayers: {
+    padding: spacing.xl,
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
   },
   emptyText: {
-    textAlign: 'center',
-    color: colors.textSecondary,
-    paddingVertical: spacing.xl,
+    color: colors.textMuted,
+    fontSize: 14,
   },
   hintText: {
     textAlign: 'center',
-    color: colors.textSecondary,
-    fontSize: 12,
+    color: colors.textMuted,
+    fontSize: 11,
     marginTop: spacing.md,
   },
   saveButton: {
-    backgroundColor: colors.accent,
     margin: spacing.lg,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    ...shadows.large,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    ...shadows.glow,
   },
   saveButtonDisabled: {
-    backgroundColor: '#9E9E9E',
-    opacity: 0.7,
+    ...shadows.small,
+  },
+  saveButtonGradient: {
+    padding: spacing.lg,
+    borderRadius: borderRadius.xl,
+    alignItems: 'center',
   },
   saveButtonText: {
-    color: colors.textDark,
-    fontWeight: 'bold',
-    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 17,
   },
 });
 

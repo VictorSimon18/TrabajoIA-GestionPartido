@@ -47,10 +47,10 @@ export const defaultTeams = [
 ];
 
 export const positions = {
-  POR: { name: 'Portero', color: '#FF9800' },
-  DEF: { name: 'Defensa', color: '#2196F3' },
-  MED: { name: 'Mediocampista', color: '#9C27B0' },
-  DEL: { name: 'Delantero', color: '#F44336' },
+  POR: { name: 'Portero', color: '#FF9100' },
+  DEF: { name: 'Defensa', color: '#448AFF' },
+  MED: { name: 'Mediocampista', color: '#D500F9' },
+  DEL: { name: 'Delantero', color: '#FF1744' },
 };
 
 export const eventTypes = {
