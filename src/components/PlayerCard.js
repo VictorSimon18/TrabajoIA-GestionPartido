@@ -12,6 +12,7 @@ const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents
   const yellowCards = playerEvents.filter(e => e.type === 'yellowCard').length;
   const redCards = playerEvents.filter(e => e.type === 'redCard').length;
   const isSubbedOut = playerEvents.some(e => e.type === 'substitution' && e.relatedPlayerId);
+  const isExpelled = redCards > 0 || yellowCards >= 2;
 
   if (isCompact) {
     return (
@@ -19,6 +20,7 @@ const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents
         style={[
           styles.compactContainer,
           isSubbedOut && styles.subbedOut,
+          isExpelled && styles.expelled,
         ]}
         onPress={onPress}
         activeOpacity={0.7}
@@ -27,11 +29,11 @@ const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents
           <Text style={styles.numberTextCompact}>{player.number}</Text>
         </View>
         <View style={styles.compactInfo}>
-          <Text style={styles.compactName} numberOfLines={1}>{player.name}</Text>
+          <Text style={[styles.compactName, isExpelled && styles.expelledText]} numberOfLines={1}>{player.name}</Text>
           <View style={styles.eventsRow}>
             {goals > 0 && <Text style={styles.eventIcon}>{'⚽'.repeat(goals)}</Text>}
             {assists > 0 && <Text style={styles.eventIcon}>{'👟'.repeat(assists)}</Text>}
-            {yellowCards > 0 && <Text style={styles.eventIcon}>🟨</Text>}
+            {yellowCards > 0 && <Text style={styles.eventIcon}>{'🟨'.repeat(yellowCards)}</Text>}
             {redCards > 0 && <Text style={styles.eventIcon}>🟥</Text>}
           </View>
         </View>
@@ -79,6 +81,18 @@ const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents
             {player.stats.redCards}
           </Text>
         </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statEmoji}>🤚</Text>
+          <Text style={styles.statValue}>{player.stats.fouls || 0}</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statEmoji}>🏁</Text>
+          <Text style={styles.statValue}>{player.stats.corners || 0}</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statEmoji}>📍</Text>
+          <Text style={styles.statValue}>{player.stats.throwIns || 0}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -107,6 +121,14 @@ const styles = StyleSheet.create({
   },
   subbedOut: {
     opacity: 0.4,
+  },
+  expelled: {
+    opacity: 0.4,
+    borderColor: '#FF1744',
+    borderWidth: 1.5,
+  },
+  expelledText: {
+    color: colors.textMuted,
   },
   numberBadge: {
     width: 46,
@@ -174,7 +196,10 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    gap: spacing.md,
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    maxWidth: 160,
+    justifyContent: 'flex-end',
   },
   statItem: {
     alignItems: 'center',

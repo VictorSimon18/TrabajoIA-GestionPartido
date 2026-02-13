@@ -47,7 +47,19 @@ const MatchScreen = ({ route, navigation }) => {
     setCurrentMinute(Math.floor(seconds / 60));
   };
 
+  // Check if a player is expelled (has red card in events)
+  const isPlayerExpelled = (playerId) => {
+    const playerEvts = events.filter(e => e.playerId === playerId);
+    const reds = playerEvts.filter(e => e.type === 'redCard').length;
+    const yellows = playerEvts.filter(e => e.type === 'yellowCard').length;
+    return reds > 0 || yellows >= 2;
+  };
+
   const handlePlayerPress = (player, team) => {
+    if (isPlayerExpelled(player.id)) {
+      Alert.alert('Jugador expulsado', `${player.name} ha sido expulsado y no puede participar más en el partido.`);
+      return;
+    }
     setSelectedPlayer(player);
     setSelectedTeam(team);
     setModalVisible(true);
@@ -55,7 +67,7 @@ const MatchScreen = ({ route, navigation }) => {
 
   const handleEventSelect = async (eventData) => {
     const newEvent = {
-      id: `event-${Date.now()}`,
+      id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
       ...eventData,
       teamId: selectedTeam.id,
     };
@@ -91,6 +103,19 @@ const MatchScreen = ({ route, navigation }) => {
     return team.players.filter(p => !lineupIds.includes(p.id));
   };
 
+  // Calculate team counters from events
+  const getTeamCounters = (teamId) => {
+    const teamEvents = events.filter(e => e.teamId === teamId);
+    return {
+      fouls: teamEvents.filter(e => e.type === 'foul').length,
+      corners: teamEvents.filter(e => e.type === 'corner').length,
+      throwIns: teamEvents.filter(e => e.type === 'throwIn').length,
+    };
+  };
+
+  const homeCounters = getTeamCounters(homeTeam.id);
+  const awayCounters = getTeamCounters(awayTeam.id);
+
   const handleEndMatch = () => {
     Alert.alert(
       'Finalizar Partido',
@@ -112,19 +137,45 @@ const MatchScreen = ({ route, navigation }) => {
 
             await saveMatch(match);
 
+            // Fix: Aggregate all events per player FIRST, then update once
+            const playerEventCounts = {};
             for (const event of events) {
-              const team = event.teamId === homeTeam.id ? homeTeam : awayTeam;
-              const player = team.players.find(p => p.id === event.playerId);
+              const key = `${event.teamId}-${event.playerId}`;
+              if (!playerEventCounts[key]) {
+                playerEventCounts[key] = {
+                  teamId: event.teamId,
+                  playerId: event.playerId,
+                  goals: 0, assists: 0, yellowCards: 0, redCards: 0,
+                  fouls: 0, corners: 0, throwIns: 0,
+                };
+              }
+              if (event.type === 'goal') playerEventCounts[key].goals++;
+              if (event.type === 'assist') playerEventCounts[key].assists++;
+              if (event.type === 'yellowCard') playerEventCounts[key].yellowCards++;
+              if (event.type === 'redCard') playerEventCounts[key].redCards++;
+              if (event.type === 'foul') playerEventCounts[key].fouls++;
+              if (event.type === 'corner') playerEventCounts[key].corners++;
+              if (event.type === 'throwIn') playerEventCounts[key].throwIns++;
+            }
+
+            // Now update each player's stats by adding the totals
+            for (const key of Object.keys(playerEventCounts)) {
+              const { teamId, playerId, goals, assists, yellowCards, redCards, fouls, corners, throwIns } = playerEventCounts[key];
+              const team = teamId === homeTeam.id ? homeTeam : awayTeam;
+              const player = team.players.find(p => p.id === playerId);
 
               if (player) {
                 const statsUpdate = {};
-                if (event.type === 'goal') statsUpdate.goals = player.stats.goals + 1;
-                if (event.type === 'assist') statsUpdate.assists = player.stats.assists + 1;
-                if (event.type === 'yellowCard') statsUpdate.yellowCards = player.stats.yellowCards + 1;
-                if (event.type === 'redCard') statsUpdate.redCards = player.stats.redCards + 1;
+                if (goals > 0) statsUpdate.goals = (player.stats.goals || 0) + goals;
+                if (assists > 0) statsUpdate.assists = (player.stats.assists || 0) + assists;
+                if (yellowCards > 0) statsUpdate.yellowCards = (player.stats.yellowCards || 0) + yellowCards;
+                if (redCards > 0) statsUpdate.redCards = (player.stats.redCards || 0) + redCards;
+                if (fouls > 0) statsUpdate.fouls = (player.stats.fouls || 0) + fouls;
+                if (corners > 0) statsUpdate.corners = (player.stats.corners || 0) + corners;
+                if (throwIns > 0) statsUpdate.throwIns = (player.stats.throwIns || 0) + throwIns;
 
                 if (Object.keys(statsUpdate).length > 0) {
-                  await updatePlayerStats(team.id, player.id, statsUpdate);
+                  await updatePlayerStats(teamId, playerId, statsUpdate);
                 }
               }
             }
@@ -139,7 +190,7 @@ const MatchScreen = ({ route, navigation }) => {
               const player = team.players.find(p => p.id === playerId);
               if (player) {
                 await updatePlayerStats(teamId, playerId, {
-                  matchesPlayed: player.stats.matchesPlayed + 1,
+                  matchesPlayed: (player.stats.matchesPlayed || 0) + 1,
                 });
               }
             }
@@ -182,6 +233,41 @@ const MatchScreen = ({ route, navigation }) => {
         <View style={styles.teamScore}>
           <TeamBadge team={awayTeam} size={32} />
           <Text style={styles.teamNameScore} numberOfLines={1}>{awayTeam.name}</Text>
+        </View>
+      </View>
+
+      {/* Team counters row */}
+      <View style={styles.countersRow}>
+        <View style={styles.countersSide}>
+          <View style={styles.counterItem}>
+            <Text style={styles.counterIcon}>🤚</Text>
+            <Text style={styles.counterValue}>{homeCounters.fouls}</Text>
+          </View>
+          <View style={styles.counterItem}>
+            <Text style={styles.counterIcon}>🏁</Text>
+            <Text style={styles.counterValue}>{homeCounters.corners}</Text>
+          </View>
+          <View style={styles.counterItem}>
+            <Text style={styles.counterIcon}>📍</Text>
+            <Text style={styles.counterValue}>{homeCounters.throwIns}</Text>
+          </View>
+        </View>
+        <View style={styles.countersLabel}>
+          <Text style={styles.countersLabelText}>Faltas · Córners · Saques</Text>
+        </View>
+        <View style={styles.countersSide}>
+          <View style={styles.counterItem}>
+            <Text style={styles.counterIcon}>🤚</Text>
+            <Text style={styles.counterValue}>{awayCounters.fouls}</Text>
+          </View>
+          <View style={styles.counterItem}>
+            <Text style={styles.counterIcon}>🏁</Text>
+            <Text style={styles.counterValue}>{awayCounters.corners}</Text>
+          </View>
+          <View style={styles.counterItem}>
+            <Text style={styles.counterIcon}>📍</Text>
+            <Text style={styles.counterValue}>{awayCounters.throwIns}</Text>
+          </View>
         </View>
       </View>
 
@@ -249,6 +335,7 @@ const MatchScreen = ({ route, navigation }) => {
         minute={currentMinute}
         onClose={() => setModalVisible(false)}
         onEventSelect={handleEventSelect}
+        events={events}
       />
     </LinearGradient>
   );
@@ -305,6 +392,45 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: colors.textMuted,
     fontWeight: '300',
+  },
+  countersRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  countersSide: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+  },
+  countersLabel: {
+    paddingHorizontal: spacing.xs,
+  },
+  countersLabelText: {
+    fontSize: 8,
+    color: colors.textMuted,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  counterItem: {
+    alignItems: 'center',
+    gap: 1,
+  },
+  counterIcon: {
+    fontSize: 12,
+  },
+  counterValue: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    fontVariant: ['tabular-nums'],
   },
   lineupsContainer: {
     flex: 1,

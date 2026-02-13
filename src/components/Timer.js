@@ -19,13 +19,7 @@ const Timer = forwardRef(({ onTimeUpdate }, ref) => {
   useEffect(() => {
     if (isRunning) {
       intervalRef.current = setInterval(() => {
-        setSeconds(prev => {
-          const newValue = prev + 1;
-          if (onTimeUpdate) {
-            onTimeUpdate(newValue);
-          }
-          return newValue;
-        });
+        setSeconds(prev => prev + 1);
       }, 1000);
     } else {
       clearInterval(intervalRef.current);
@@ -33,6 +27,12 @@ const Timer = forwardRef(({ onTimeUpdate }, ref) => {
 
     return () => clearInterval(intervalRef.current);
   }, [isRunning]);
+
+  useEffect(() => {
+    if (onTimeUpdate) {
+      onTimeUpdate(seconds);
+    }
+  }, [seconds]);
 
   const formatTime = (totalSeconds) => {
     const mins = Math.floor(totalSeconds / 60);

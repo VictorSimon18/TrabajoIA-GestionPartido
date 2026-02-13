@@ -20,6 +20,7 @@ const EventModal = ({
   onClose,
   onEventSelect,
   benchPlayers = [],
+  events = [],
 }) => {
   const [showAssistPicker, setShowAssistPicker] = useState(false);
   const [showSubstitutionPicker, setShowSubstitutionPicker] = useState(false);
@@ -29,6 +30,12 @@ const EventModal = ({
 
   const positionData = positions[player.position] || { name: player.position, color: '#5A6384' };
 
+  // Calculate card status for this player from match events
+  const playerEvents = events.filter(e => e.playerId === player.id);
+  const yellowCount = playerEvents.filter(e => e.type === 'yellowCard').length;
+  const redCount = playerEvents.filter(e => e.type === 'redCard').length;
+  const isExpelled = redCount > 0 || yellowCount >= 2;
+
   const handleEventPress = (eventType) => {
     if (eventType === 'goal') {
       setPendingEvent({ type: 'goal' });
@@ -36,6 +43,29 @@ const EventModal = ({
     } else if (eventType === 'substitution') {
       setPendingEvent({ type: 'substitution' });
       setShowSubstitutionPicker(true);
+    } else if (eventType === 'yellowCard') {
+      if (yellowCount >= 1) {
+        // Second yellow → register yellow + auto red (double yellow)
+        onEventSelect({
+          type: 'yellowCard',
+          playerId: player.id,
+          minute,
+        });
+        onEventSelect({
+          type: 'redCard',
+          playerId: player.id,
+          minute,
+          isDoubleYellow: true,
+        });
+        handleClose();
+      } else {
+        onEventSelect({
+          type: 'yellowCard',
+          playerId: player.id,
+          minute,
+        });
+        handleClose();
+      }
     } else {
       onEventSelect({
         type: eventType,
@@ -89,9 +119,12 @@ const EventModal = ({
 
   const eventButtons = [
     { type: 'goal', icon: '⚽', label: 'Gol', gradient: ['#00E676', '#00C853'] },
-    { type: 'yellowCard', icon: '🟨', label: 'Amarilla', gradient: ['#FFD600', '#FFAB00'] },
-    { type: 'redCard', icon: '🟥', label: 'Roja', gradient: ['#FF1744', '#D50000'] },
+    { type: 'yellowCard', icon: '🟨', label: 'Amarilla', gradient: ['#FFD600', '#FFAB00'], disabled: yellowCount >= 2 },
+    { type: 'redCard', icon: '🟥', label: 'Roja', gradient: ['#FF1744', '#D50000'], disabled: redCount > 0 },
     { type: 'substitution', icon: '🔄', label: 'Cambio', gradient: ['#D500F9', '#AA00FF'] },
+    { type: 'foul', icon: '🤚', label: 'Falta', gradient: ['#FF6D00', '#E65100'] },
+    { type: 'corner', icon: '🏁', label: 'Córner', gradient: ['#00BFA5', '#00897B'] },
+    { type: 'throwIn', icon: '📍', label: 'Saque', gradient: ['#5C6BC0', '#3949AB'] },
   ];
 
   return (
@@ -119,6 +152,18 @@ const EventModal = ({
               <Text style={styles.minuteText}>{minute}'</Text>
             </View>
           </View>
+
+          {/* Expelled message */}
+          {isExpelled && !showAssistPicker && !showSubstitutionPicker && (
+            <View style={styles.expelledContainer}>
+              <Text style={styles.expelledIcon}>🟥</Text>
+              <Text style={styles.expelledText}>Jugador expulsado</Text>
+              <Text style={styles.expelledSubtext}>No puede registrar más eventos</Text>
+              <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                <Text style={styles.closeButtonText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Assist picker */}
           {showAssistPicker && (
@@ -182,26 +227,33 @@ const EventModal = ({
           )}
 
           {/* Event buttons grid */}
-          {!showAssistPicker && !showSubstitutionPicker && (
+          {!isExpelled && !showAssistPicker && !showSubstitutionPicker && (
             <View style={styles.eventsContainer}>
               <Text style={styles.eventsTitle}>Registrar evento</Text>
 
+              {/* Card warning */}
+              {yellowCount === 1 && (
+                <View style={styles.warningBadge}>
+                  <Text style={styles.warningText}>⚠️ Tiene 1 amarilla — la siguiente será doble amarilla (roja)</Text>
+                </View>
+              )}
+
               <View style={styles.eventsGrid}>
-                {eventButtons.map(({ type, icon, label, gradient }) => (
+                {eventButtons.map(({ type, icon, label, gradient, disabled }) => (
                   <TouchableOpacity
                     key={type}
-                    style={styles.eventButtonWrapper}
-                    onPress={() => handleEventPress(type)}
-                    activeOpacity={0.7}
+                    style={[styles.eventButtonWrapper, disabled && styles.eventButtonDisabled]}
+                    onPress={() => !disabled && handleEventPress(type)}
+                    activeOpacity={disabled ? 1 : 0.7}
                   >
                     <LinearGradient
-                      colors={gradient}
+                      colors={disabled ? [colors.surfaceLight, colors.surfaceLight] : gradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.eventButton}
                     >
-                      <Text style={styles.eventIcon}>{icon}</Text>
-                      <Text style={styles.eventLabel}>{label}</Text>
+                      <Text style={[styles.eventIcon, disabled && styles.eventIconDisabled]}>{icon}</Text>
+                      <Text style={[styles.eventLabel, disabled && styles.eventLabelDisabled]}>{label}</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 ))}
@@ -290,6 +342,39 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 16,
   },
+  expelledContainer: {
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  expelledIcon: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  expelledText: {
+    ...typography.subtitle,
+    color: colors.danger,
+    fontWeight: '700',
+  },
+  expelledSubtext: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  warningBadge: {
+    backgroundColor: 'rgba(255, 214, 0, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 214, 0, 0.3)',
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  warningText: {
+    color: '#FFD600',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   eventsContainer: {
     padding: spacing.lg,
   },
@@ -313,19 +398,28 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     ...shadows.medium,
   },
+  eventButtonDisabled: {
+    opacity: 0.4,
+  },
   eventButton: {
-    padding: spacing.lg,
+    padding: spacing.md,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
   },
   eventIcon: {
-    fontSize: 32,
-    marginBottom: spacing.sm,
+    fontSize: 28,
+    marginBottom: spacing.xs,
+  },
+  eventIconDisabled: {
+    opacity: 0.5,
   },
   eventLabel: {
     color: '#FFFFFF',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 13,
+  },
+  eventLabelDisabled: {
+    color: colors.textMuted,
   },
   closeButton: {
     marginTop: spacing.lg,
