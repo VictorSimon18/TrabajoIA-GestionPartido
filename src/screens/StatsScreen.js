@@ -117,6 +117,27 @@ const StatsScreen = ({ navigation }) => {
             </View>
           </View>
 
+          {/* Team collective stats */}
+          <View style={styles.collectiveRow}>
+            <View style={styles.collectiveItem}>
+              <Text style={styles.collectiveIcon}>🤚</Text>
+              <Text style={styles.collectiveValue}>{stats.fouls || 0}</Text>
+              <Text style={styles.collectiveLabel}>Faltas</Text>
+            </View>
+            <View style={styles.collectiveDivider} />
+            <View style={styles.collectiveItem}>
+              <Text style={styles.collectiveIcon}>🏁</Text>
+              <Text style={styles.collectiveValue}>{stats.corners || 0}</Text>
+              <Text style={styles.collectiveLabel}>Córners</Text>
+            </View>
+            <View style={styles.collectiveDivider} />
+            <View style={styles.collectiveItem}>
+              <Text style={styles.collectiveIcon}>📍</Text>
+              <Text style={styles.collectiveValue}>{stats.throwIns || 0}</Text>
+              <Text style={styles.collectiveLabel}>Saques de banda</Text>
+            </View>
+          </View>
+
           {/* Players */}
           <View style={styles.playersSection}>
             <Text style={styles.playersTitle}>Jugadores</Text>
@@ -361,6 +382,41 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: spacing.xs,
     textTransform: 'uppercase',
+  },
+  collectiveRow: {
+    flexDirection: 'row',
+    backgroundColor: colors.backgroundCard,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  collectiveItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  collectiveDivider: {
+    width: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.xs,
+  },
+  collectiveIcon: {
+    fontSize: 18,
+  },
+  collectiveValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  collectiveLabel: {
+    fontSize: 9,
+    color: colors.textMuted,
+    marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
   playersSection: {
     marginBottom: spacing.lg,

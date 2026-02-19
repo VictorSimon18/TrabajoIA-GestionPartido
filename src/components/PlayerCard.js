@@ -81,18 +81,6 @@ const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents
             {player.stats.redCards}
           </Text>
         </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statEmoji}>🤚</Text>
-          <Text style={styles.statValue}>{player.stats.fouls || 0}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statEmoji}>🏁</Text>
-          <Text style={styles.statValue}>{player.stats.corners || 0}</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statEmoji}>📍</Text>
-          <Text style={styles.statValue}>{player.stats.throwIns || 0}</Text>
-        </View>
       </View>
     </TouchableOpacity>
   );

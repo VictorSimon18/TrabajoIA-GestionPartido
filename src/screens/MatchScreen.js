@@ -257,7 +257,7 @@ const MatchScreen = ({ route, navigation }) => {
           </View>
         </View>
         <View style={styles.countersLabel}>
-          <Text style={styles.countersLabelText}>Faltas · Córners · Saques</Text>
+          <Text style={styles.countersLabelText}>Faltas · Córners · Saques de banda</Text>
         </View>
         <View style={styles.countersSide}>
           <View style={styles.counterItem}>

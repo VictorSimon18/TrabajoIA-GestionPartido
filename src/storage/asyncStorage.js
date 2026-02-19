@@ -183,6 +183,7 @@ export const getTeamStats = async (teamId) => {
 
     let wins = 0, draws = 0, losses = 0;
     let goalsFor = 0, goalsAgainst = 0;
+    let fouls = 0, corners = 0, throwIns = 0;
 
     teamMatches.forEach(match => {
       const isHome = match.homeTeam.id === teamId;
@@ -195,6 +196,11 @@ export const getTeamStats = async (teamId) => {
       if (teamScore > opponentScore) wins++;
       else if (teamScore < opponentScore) losses++;
       else draws++;
+
+      const teamEvents = (match.events || []).filter(e => e.teamId === teamId);
+      fouls += teamEvents.filter(e => e.type === 'foul').length;
+      corners += teamEvents.filter(e => e.type === 'corner').length;
+      throwIns += teamEvents.filter(e => e.type === 'throwIn').length;
     });
 
     return {
@@ -207,6 +213,9 @@ export const getTeamStats = async (teamId) => {
       goalsAgainst,
       goalDifference: goalsFor - goalsAgainst,
       points: (wins * 3) + draws,
+      fouls,
+      corners,
+      throwIns,
     };
   } catch (error) {
     console.error('Error getting team stats:', error);
