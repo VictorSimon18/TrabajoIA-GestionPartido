@@ -62,6 +62,10 @@ const PlayerCard = ({ player, teamColor, onPress, isCompact = false, matchEvents
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
+          <Text style={styles.statEmoji}>🏟️</Text>
+          <Text style={styles.statValue}>{player.stats.matchesPlayed || 0}</Text>
+        </View>
+        <View style={styles.statItem}>
           <Text style={styles.statEmoji}>⚽</Text>
           <Text style={styles.statValue}>{player.stats.goals}</Text>
         </View>

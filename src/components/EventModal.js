@@ -122,9 +122,9 @@ const EventModal = ({
     { type: 'yellowCard', icon: '🟨', label: 'Amarilla', gradient: ['#FFD600', '#FFAB00'], disabled: yellowCount >= 2 },
     { type: 'redCard', icon: '🟥', label: 'Roja', gradient: ['#FF1744', '#D50000'], disabled: redCount > 0 },
     { type: 'substitution', icon: '🔄', label: 'Cambio', gradient: ['#D500F9', '#AA00FF'] },
-    { type: 'foul', icon: '🤚', label: 'Falta', gradient: ['#FF6D00', '#E65100'] },
+    { type: 'foul', icon: '😮‍💨', label: 'Falta', gradient: ['#FF6D00', '#E65100'] },
     { type: 'corner', icon: '🏁', label: 'Córner', gradient: ['#00BFA5', '#00897B'] },
-    { type: 'throwIn', icon: '📍', label: 'Saque', gradient: ['#5C6BC0', '#3949AB'] },
+    { type: 'throwIn', icon: '🤚', label: 'Saque de banda', gradient: ['#5C6BC0', '#3949AB'] },
   ];
 
   return (
