@@ -7,7 +7,13 @@ const Timer = forwardRef(({ onTimeUpdate }, ref) => {
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [half, setHalf] = useState(1);
+  const [stoppageTime1, setStoppageTime1] = useState(0);
+  const [stoppageTime2, setStoppageTime2] = useState(0);
   const intervalRef = useRef(null);
+
+  const inStoppage1 = half === 1 && seconds >= 45 * 60;
+  const inStoppage2 = half === 2 && seconds >= 90 * 60;
+  const showStoppageBox = inStoppage1 || inStoppage2;
 
   useImperativeHandle(ref, () => ({
     getTime: () => seconds,
@@ -24,39 +30,53 @@ const Timer = forwardRef(({ onTimeUpdate }, ref) => {
     } else {
       clearInterval(intervalRef.current);
     }
-
     return () => clearInterval(intervalRef.current);
   }, [isRunning]);
 
   useEffect(() => {
-    if (onTimeUpdate) {
-      onTimeUpdate(seconds);
-    }
+    if (onTimeUpdate) onTimeUpdate(seconds);
   }, [seconds]);
 
   const formatTime = (totalSeconds) => {
+    if (inStoppage1) {
+      const extra = Math.floor((totalSeconds - 45 * 60) / 60);
+      return `45+${extra}`;
+    }
+    if (inStoppage2) {
+      const extra = Math.floor((totalSeconds - 90 * 60) / 60);
+      return `90+${extra}`;
+    }
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handlePlayPause = () => {
-    setIsRunning(!isRunning);
-  };
+  const handlePlayPause = () => setIsRunning(prev => !prev);
 
   const handleReset = () => {
     setIsRunning(false);
     setSeconds(0);
     setHalf(1);
+    setStoppageTime1(0);
+    setStoppageTime2(0);
   };
 
   const handleNextHalf = () => {
-    if (half === 1) {
-      setIsRunning(false);
-      setSeconds(45 * 60);
-      setHalf(2);
+    setIsRunning(false);
+    setSeconds(45 * 60);
+    setHalf(2);
+  };
+
+  const adjustStoppage = (delta) => {
+    if (inStoppage1) {
+      setStoppageTime1(prev => Math.max(0, Math.min(15, prev + delta)));
+    } else if (inStoppage2) {
+      setStoppageTime2(prev => Math.max(0, Math.min(15, prev + delta)));
     }
   };
+
+  const currentStoppage = inStoppage1 ? stoppageTime1 : stoppageTime2;
+  const canGoToSecondHalf = half === 1 && !isRunning && seconds >= (45 + stoppageTime1) * 60;
 
   return (
     <View style={styles.container}>
@@ -71,15 +91,41 @@ const Timer = forwardRef(({ onTimeUpdate }, ref) => {
         </View>
       </View>
 
-      {/* Timer display */}
-      <Text style={styles.timerText}>{formatTime(seconds)}</Text>
+      {/* Timer row: time + stoppage box */}
+      <View style={styles.timerRow}>
+        <Text style={[styles.timerText, showStoppageBox && styles.timerTextCompact]}>
+          {formatTime(seconds)}
+        </Text>
+
+        {showStoppageBox && (
+          <View style={styles.stoppageBox}>
+            <Text style={styles.stoppageLabel}>T. Añadido</Text>
+            <View style={styles.stoppageControls}>
+              <TouchableOpacity
+                style={styles.stoppageBtn}
+                onPress={() => adjustStoppage(-1)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.stoppageBtnText}>−</Text>
+              </TouchableOpacity>
+              <View style={styles.stoppageValueBox}>
+                <Text style={styles.stoppageValue}>{currentStoppage}'</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.stoppageBtn}
+                onPress={() => adjustStoppage(1)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.stoppageBtnText}>+</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
 
       {/* Controls */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.resetButton]}
-          onPress={handleReset}
-        >
+        <TouchableOpacity style={[styles.button, styles.resetButton]} onPress={handleReset}>
           <Text style={styles.resetIcon}>↺</Text>
         </TouchableOpacity>
 
@@ -91,17 +137,12 @@ const Timer = forwardRef(({ onTimeUpdate }, ref) => {
             colors={isRunning ? ['#FFD600', '#FFAB00'] : ['#00E676', '#00C853']}
             style={styles.playButtonGradient}
           >
-            <Text style={styles.playIcon}>
-              {isRunning ? '❚❚' : '▶'}
-            </Text>
+            <Text style={styles.playIcon}>{isRunning ? '❚❚' : '▶'}</Text>
           </LinearGradient>
         </TouchableOpacity>
 
-        {half === 1 && !isRunning && seconds > 0 ? (
-          <TouchableOpacity
-            style={[styles.button, styles.nextHalfButton]}
-            onPress={handleNextHalf}
-          >
+        {canGoToSecondHalf ? (
+          <TouchableOpacity style={[styles.button, styles.nextHalfButton]} onPress={handleNextHalf}>
             <Text style={styles.nextHalfText}>2T →</Text>
           </TouchableOpacity>
         ) : (
@@ -154,12 +195,69 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.border,
   },
+  timerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+  },
   timerText: {
     fontSize: 72,
     fontWeight: '200',
     color: colors.textPrimary,
     fontVariant: ['tabular-nums'],
     letterSpacing: 4,
+  },
+  timerTextCompact: {
+    fontSize: 52,
+    letterSpacing: 2,
+  },
+  stoppageBox: {
+    backgroundColor: colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: borderRadius.lg,
+    padding: spacing.sm,
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  stoppageLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.accent,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  stoppageControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  stoppageBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stoppageBtnText: {
+    color: colors.textPrimary,
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 22,
+  },
+  stoppageValueBox: {
+    minWidth: 36,
+    alignItems: 'center',
+  },
+  stoppageValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.accent,
+    fontVariant: ['tabular-nums'],
   },
   buttonContainer: {
     flexDirection: 'row',
