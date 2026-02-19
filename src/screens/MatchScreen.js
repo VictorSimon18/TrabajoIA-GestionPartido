@@ -18,7 +18,7 @@ import { saveMatch, updatePlayerStats, saveCurrentMatch, clearCurrentMatch } fro
 
 const MatchScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
-  const { homeTeam, awayTeam } = route.params;
+  const { homeTeam, awayTeam, homeLineup: paramHomeLineup, awayLineup: paramAwayLineup } = route.params;
   const timerRef = useRef(null);
 
   const [homeScore, setHomeScore] = useState(0);
@@ -26,8 +26,8 @@ const MatchScreen = ({ route, navigation }) => {
   const [events, setEvents] = useState([]);
   const [currentMinute, setCurrentMinute] = useState(0);
 
-  const [homeLineup, setHomeLineup] = useState(homeTeam.players.slice(0, 11).map(p => p.id));
-  const [awayLineup, setAwayLineup] = useState(awayTeam.players.slice(0, 11).map(p => p.id));
+  const [homeLineup, setHomeLineup] = useState(paramHomeLineup || homeTeam.players.slice(0, 11).map(p => p.id));
+  const [awayLineup, setAwayLineup] = useState(paramAwayLineup || awayTeam.players.slice(0, 11).map(p => p.id));
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -95,8 +95,12 @@ const MatchScreen = ({ route, navigation }) => {
     }
   };
 
+  const positionOrder = { POR: 0, DEF: 1, MED: 2, DEL: 3 };
+
   const getLineupPlayers = (team, lineupIds) => {
-    return team.players.filter(p => lineupIds.includes(p.id));
+    return team.players
+      .filter(p => lineupIds.includes(p.id))
+      .sort((a, b) => (positionOrder[a.position] ?? 99) - (positionOrder[b.position] ?? 99));
   };
 
   const getBenchPlayers = (team, lineupIds) => {

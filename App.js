@@ -11,6 +11,7 @@ import MatchScreen from './src/screens/MatchScreen';
 import TeamManagerScreen from './src/screens/TeamManagerScreen';
 import CreateTeamScreen from './src/screens/CreateTeamScreen';
 import StatsScreen from './src/screens/StatsScreen';
+import LineupScreen from './src/screens/LineupScreen';
 
 // Theme
 import { colors } from './src/styles/theme';
@@ -57,6 +58,7 @@ export default function App() {
             component={MatchScreen}
             options={{ gestureEnabled: false }}
           />
+          <Stack.Screen name="Lineup" component={LineupScreen} />
           <Stack.Screen name="TeamManager" component={TeamManagerScreen} />
           <Stack.Screen name="CreateTeam" component={CreateTeamScreen} />
           <Stack.Screen name="Stats" component={StatsScreen} />

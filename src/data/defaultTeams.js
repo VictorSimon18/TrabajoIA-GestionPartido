@@ -49,7 +49,7 @@ export const defaultTeams = [
 export const positions = {
   POR: { name: 'Portero', color: '#FF9100' },
   DEF: { name: 'Defensa', color: '#448AFF' },
-  MED: { name: 'Mediocampista', color: '#D500F9' },
+  MED: { name: 'Mediocentro', color: '#D500F9' },
   DEL: { name: 'Delantero', color: '#FF1744' },
 };
 

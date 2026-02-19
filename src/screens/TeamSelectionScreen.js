@@ -52,12 +52,7 @@ const TeamSelectionScreen = ({ navigation }) => {
       return;
     }
 
-    if (homeTeam.players.length < 11 || awayTeam.players.length < 11) {
-      Alert.alert('Error', 'Ambos equipos necesitan al menos 11 jugadores');
-      return;
-    }
-
-    navigation.navigate('Match', { homeTeam, awayTeam });
+    navigation.navigate('Lineup', { homeTeam, awayTeam });
   };
 
   const renderTeamSelector = (title, selectedTeam, type) => (
